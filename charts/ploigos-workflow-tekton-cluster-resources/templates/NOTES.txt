@@ -1,0 +1,22 @@
+*********************************************
+* ploigos-workflow-tekton-cluster-resources *
+*********************************************
+
+Installed Following Cluster level resources:
+* ClusterTriggerBinding
+  - gitea-pullreq
+
+* ClusterTask
+  - import-pgp-keys
+  - ploigos-setup-python-venv
+  - ploigos-step-runner
+  - pattern-matcher
+    * temporary until https://github.com/tektoncd/pipeline/issues/3468 is resolved
+  - ploigos-git-clone
+    * temporary until https://github.com/tektoncd/catalog/issues/562 is resolved
+
+* ClusterRole
+  - {{ include "ploigos-workflow-tekton-cluster-resources.sccName" . }}
+
+* SecurityContextConstraints
+  - {{ include "ploigos-workflow-tekton-cluster-resources.sccName" . }}

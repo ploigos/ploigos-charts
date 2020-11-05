@@ -1,0 +1,56 @@
+# NOTE
+# These are all global so that user doesn't have to know which child chart actually uses them
+# and rather just interacts with the cohesive system.
+#
+# Would have rather had them be scoped to the parent Chart and then re-pass them to child Chart
+# but no way to do that with Helm.
+global:
+  # serviceName is the name of the the service within a given application (applicationName)
+  # that this Workflow is being deployed for.
+  # In many places serviceName and applicationName will be combined to make
+  # unique names for created resources.
+  # Required.
+  serviceName:
+
+  # applicationName is the name of the application that contains the service (serviceName)
+  # that this Workflow is being deployed for.
+  # In many places serviceName and applicationName will be combined to make
+  # unique names for created resources.
+  # Required.
+  applicationName:
+
+  # pgpKeysSecretNameOverride is the optional override for Kubernetes Secret name to
+  # attach to the workflow worker containers for importing PGP keys, most notably used to
+  # decrypt SOPS encrypted configuration files.
+  #
+  # This is most useful if you don't want to supply your PGP keys via the pgpKeys parameter
+  # and have a Kubernetes Secret automatically created for you but rather reference an already
+  # existing Secret.
+  # Optional.
+  pgpKeysSecretNameOverride:
+  # pgpKeys is a dictionary of PGP keys to place into a Kubernetes Secret and then attach to the
+  # Workflow worker containers to then import for usel most notably used to decrypt SOPS
+  # encrypted configuration files.
+  # Optional.
+  pgpKeys: {}
+
+  # workflowWorkerRunAsUser is the UID to run the workflow worker containers as.
+  #
+  # IMPORTANT:
+  #  From experimentation this NEEDS be a UID that exists in the worker container images
+  #  images. This is due to limitations of how subuid, subgid, and namespaces work
+  #  and their appropriate ranges not being created for random UID is not created
+  #  with `useradd` and how that interacts with `buildah unshare` for rootless
+  #  container builds within a container.
+  #
+  # NOTE:
+  #  The quay.io/ploigos/ploigos-base image uses UID 1001 but if you don't like that UID
+  #  then you can use https://github.com/ploigos/ploigos-containers to create custom
+  #  versions of the tssc containers and passing in the container ARG `PLOIGOS_USER_UID` to
+  #  change the UID.
+  workflowWorkerRunAsUser: 1001
+  # workflowWorkerRunAsUserRoleName is the name of the Kubernetes Role that has permissions
+  # to run as the UID specified with workflowWorkerRunAsUser.
+  # A RoleBinding will be created and attached the ServiceAccount that is used to run
+  # the workflow Pods.
+  workflowWorkerRunAsUserRoleName: ploigos-run-as-user-1001

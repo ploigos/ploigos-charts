@@ -1,0 +1,11 @@
+---
+global:
+  applicationName: test-app
+  serviceName: test-srv
+
+  # NOTE:
+  #   have to test without RBAC since GitHub action tests on 'kind' server where
+  #   SecurityContextConstraints don't exist.
+  #   Would much rather not have this hard coded in here and pass in at run time but....
+  #   https://github.com/helm/chart-testing/issues/301
+rbacCreate: false

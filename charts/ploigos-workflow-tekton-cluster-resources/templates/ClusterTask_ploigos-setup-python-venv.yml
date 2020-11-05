@@ -1,0 +1,261 @@
+apiVersion: tekton.dev/v1beta1
+kind: ClusterTask
+metadata:
+  name: ploigos-setup-python-venv
+  labels:
+    {{- include "ploigos-workflow-tekton-cluster-resources.labels" . | nindent 4 }}
+  annotations:
+    tekton.dev/pipelines.minVersion: "0.14.0"
+    tekton.dev/tags: ploigos,python,venv,pip
+    tekton.dev/displayName: Ploigos Setup Python Virtual Environment
+spec:
+  description: |
+    Sets up a Python virtual environment with the Ploigos step runner library in the given home
+    workspace.
+  workspaces:
+  - name: home
+    mountPath: /home/tssc
+    description: |
+      Workspace for the container users home directory.
+
+      Important because the home directory is where the python virtual environment will be setup
+      to be shared with future steps.
+  params:
+  - name: verbose
+    description: log the commands used during execution
+    type: string
+    default: "false"
+  - name: image
+    type: string
+    description: |
+      Container image to run the steps of this task in.
+    default: tssc/tssc-base:latest
+  # NOTE: See https://github.com/tektoncd/pipeline/issues/3423
+  #- name: imagePullPolicy
+  #  type: string
+  #  description: |
+  #    Policy for pulling new versions of the given image.
+  #  default: IfNotPresent
+  - name: stepRunnerPackageName
+    type: string
+    description: |
+      Name of the python package to install/update/verify as the Workflow Step Runner
+      in the created python virtual environment.
+    default: "tssc"
+  - name: stepRunnerUpdateLibrary
+    type: string
+    description: |
+      If 'true', then pull the Workflow Step Runner library source code and build it.
+      If 'false', use the version of the Workflow Step Runner library that is pre-installed
+      in the CI worker images.
+
+      If 'false' then the following parameters are ignored:
+        - 'stepRunnerLibSourceUrl'
+        - 'stepRunnerLibIndexUrl'
+        - 'stepRunnerLibExtraIndexUrl'
+        - 'stepRunnerLibVersion'
+    default: "false"
+  - name: stepRunnerLibIndexUrl
+    type: string
+    description: |
+      If 'stepRunnerUpdateLibrary' is true and 'stepRunnerLibSourceUrl' is not supplied then this
+      will be passed to pip as '--index-url' for installing the Workflow Step Runner library
+      and its dependencies.
+
+      NOTE
+      ----
+      PIP is indeterminate whether it will pull packages from '--index-url' or
+      '--extra-index-url', therefor be sure to specify 'stepRunnerLibVersion'
+      if trying to pull a specific version from a specific index.
+
+      SEE
+      ---
+      - https://pip.pypa.io/en/stable/reference/pip_install/#id48
+    default: "https://pypi.org/simple/"
+  - name: stepRunnerLibExtraIndexUrl
+    type: string
+    description: |
+      If 'stepRunnerUpdateLibrary' is true and 'stepRunnerLibSourceUrl' is not supplied then this
+      will be passed to pip as '--extra-index-url' for installing the Workflow Step Runner library
+      and its dependencies.
+
+      NOTE
+      ----
+      PIP is indeterminate whether it will pull packages from '--index-url' or
+      '--extra-index-url', therefor be sure to specify 'stepRunnerLibVersion'
+      if trying to pull a specific version from a specific index.
+
+      SEE
+      ---
+      - https://pip.pypa.io/en/stable/reference/pip_install/#id48
+    default: "https://pypi.org/simple/"
+  - name: stepRunnerLibVersion
+    type: string
+    description: |
+      If 'stepRunnerUpdateLibrary' is true and 'stepRunnerLibSourceUrl' is not supplied then this
+      will be passed to pip as as the version of the Workflow Step Runner library to install.
+
+      NOTE
+      ----
+      If not given pip will install the latest from either 'stepRunnerLibIndexUrl' or
+      'stepRunnerLibExtraIndexUrl' indeterminately.
+    default: ""
+  - name: stepRunnerLibSourceUrl
+    type: string
+    description: |
+      If none empty value given and 'stepRunnerUpdateLibrary' is true this will be used as the source
+      location to install the Workflow Step Runner library from rather then from a PEP 503 compliant
+      repository.
+
+      If given then the following parameters are ignored:
+        - 'stepRunnerLibIndexUrl'
+        - 'stepRunnerLibExtraIndexUrl'
+        - 'stepRunnerLibVersion'
+
+      EXAMPLES
+      --------
+      git+https://github.com/rhtconsulting/tssc-python-package.git@feature/NAPSSPO-1018
+      installs from the public 'rhtconsulting' fork from the 'feature/NAPSSPO-1018' branch.
+
+      git+https://gitea.internal.example.xyz/tools/tssc-python-package.git@main
+      installs from an internal fork of the 'ploigos-step-runner' library from the 'main' branch.
+    default: ""
+  - name: venvName
+    type: string
+    description: |
+      Name of the virtual environment to set up in the given home worksapce.
+    default: "venv-ploigos"
+
+  results:
+  - name: venvPath
+    description: |
+      Path to the setup python virtual environment.
+
+  steps:
+  - name: create-python-venv
+    image: $(params.image)
+    # NOTE:
+    #   when https://github.com/tektoncd/pipeline/issues/3423 resolved
+    #   replace with $(params.imagePullPolicy)
+    imagePullPolicy: {{ $.Values.imagePullPolicy }}
+    {{- if $.Values.workflowWorkerRunAsUser }}
+    securityContext:
+      runAsUser: {{ $.Values.workflowWorkerRunAsUser | int }}
+    {{- end }}
+    env:
+    - name: HOME
+      value: $(workspaces.home.path)
+    - name: VENV_NAME
+      value: $(params.venvName)
+    - name: VERBOSE
+      value: $(params.verbose)
+    workingDir: $(workspaces.home.path)
+    script: |
+      #!/bin/sh
+      if [ "${VERBOSE}" == "true" ]; then set -x; else set +x; fi
+      set -eu -o pipefail
+
+      echo "***********************************************************************************************************************************"
+      echo "* EPIC HACK/WORKDAROUND FOR DUPLICATE TaskRun BEING CREATED CAUSING PERMISSIONS ISSUES WITH PVC MOUNTED IN THE DUPLICATE TaskRuns *"
+      echo "***********************************************************************************************************************************"
+      echo "SEE:"
+      echo "* https://github.com/tektoncd/pipeline/issues/3126"
+      echo "* https://github.com/tektoncd/pipeline/issues/2813"
+      echo "* https://github.com/tektoncd/pipeline/issues/3510"
+      echo "Check if can 'ls -al $HOME', if not then will throw error and retry this task"
+      ls -al $HOME
+
+      echo "**********************"
+      echo "* Create Python venv *"
+      echo "**********************"
+      python -m venv --system-site-packages --copies ${HOME}/${VENV_NAME}
+
+  - name: install-step-runner-python-library
+    image: $(params.image)
+    # NOTE:
+    #   when https://github.com/tektoncd/pipeline/issues/3423 resolved
+    #   replace with $(params.imagePullPolicy)
+    imagePullPolicy: {{ $.Values.imagePullPolicy }}
+    {{- if $.Values.workflowWorkerRunAsUser }}
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: {{ $.Values.workflowWorkerRunAsUser | int }}
+    {{- end }}
+    env:
+    - name: HOME
+      value: $(workspaces.home.path)
+    - name: UPDATE_STEP_RUNNER_LIBRARY
+      value: $(params.stepRunnerUpdateLibrary)
+    - name: STEP_RUNNER_LIB_SOURCE_URL
+      value: $(params.stepRunnerLibSourceUrl)
+    - name: STEP_RUNNER_LIB_INDEX_URL
+      value: $(params.stepRunnerLibIndexUrl)
+    - name: STEP_RUNNER_LIB_EXTRA_INDEX_URL
+      value: $(params.stepRunnerLibExtraIndexUrl)
+    - name: STEP_RUNNER_LIB_VERSION
+      value: $(params.stepRunnerLibVersion)
+    - name: STEP_RUNNER_PACKAGE_NAME
+      value: $(params.stepRunnerPackageName)
+    - name: VENV_NAME
+      value: $(params.venvName)
+    - name: VERBOSE
+      value: $(params.verbose)
+    script: |
+      #!/bin/sh
+      if [ "${VERBOSE}" == "true" ]; then set -x; else set +x; fi
+      set -eu -o pipefail
+
+      echo "***********************************************************************************************************************************"
+      echo "* EPIC HACK/WORKDAROUND FOR DUPLICATE TaskRun BEING CREATED CAUSING PERMISSIONS ISSUES WITH PVC MOUNTED IN THE DUPLICATE TaskRuns *"
+      echo "***********************************************************************************************************************************"
+      echo "SEE:"
+      echo "* https://github.com/tektoncd/pipeline/issues/3126"
+      echo "* https://github.com/tektoncd/pipeline/issues/2813"
+      echo "* https://github.com/tektoncd/pipeline/issues/3510"
+      echo "Check if can 'ls -al $HOME', if not then will throw error and retry this task"
+      ls -al $HOME
+
+      if [[ ${UPDATE_STEP_RUNNER_LIBRARY} =~ true|True ]]; then
+        echo "*********************"
+        echo "* Update Python Pip *"
+        echo "*********************"
+
+        source ${HOME}/${VENV_NAME}/bin/activate
+        python -m pip install --upgrade pip
+
+        if [[ ${STEP_RUNNER_LIB_SOURCE_URL} ]]; then
+          STEP_RUNNER_LIB_INSTALL_CMD="python -m pip install --upgrade ${STEP_RUNNER_LIB_SOURCE_URL}"
+        else
+          indexUrlFlag=""
+
+          if [[ ${STEP_RUNNER_LIB_INDEX_URL} ]]; then
+            indexUrlFlag="--index-url ${STEP_RUNNER_LIB_INDEX_URL}"
+          fi
+
+          extraIndexUrlFlag=""
+          if [[ ${STEP_RUNNER_LIB_EXTRA_INDEX_URL} ]]; then
+            extraIndexUrlFlag="--extra-index-url  ${STEP_RUNNER_LIB_EXTRA_INDEX_URL}"
+          fi
+
+          STEP_RUNNER_LIB_INSTALL_CMD="python -m pip install --upgrade ${STEP_RUNNER_LIB_INDEX_URL} ${STEP_RUNNER_LIB_EXTRA_INDEX_URL} ${STEP_RUNNER_PACKAGE_NAME}"
+
+          if [[ ${STEP_RUNNER_LIB_VERSION} ]]; then
+            STEP_RUNNER_LIB_INSTALL_CMD+="==${STEP_RUNNER_LIB_VERSION}"
+          fi
+        fi
+
+        echo "*************************************"
+        echo "* Update Step Runner Python Package *"
+        echo "*************************************"
+        ${STEP_RUNNER_LIB_INSTALL_CMD}
+      else
+        echo "Using pre-installed Workflow Step Runner library"
+      fi
+
+      echo "****************************************************"
+      echo "* Installed Step Runner Python Package Information *"
+      echo "****************************************************"
+      python -m pip show ${STEP_RUNNER_PACKAGE_NAME}
+
+      # return results
+      echo -n "$HOME/$(params.venvName)" > $(results.venvPath.path)

@@ -1,0 +1,102 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: ClusterTask
+metadata:
+  name: pattern-matcher
+  labels:
+    {{- include "ploigos-workflow-tekton-cluster-resources.labels" . | nindent 4 }}
+  annotations:
+    tekton.dev/pipelines.minVersion: "0.14.0"
+    tekton.dev/tags: ploigos,pattern,match,regex,gate
+    tekton.dev/displayName: Pattern Matcher
+spec:
+  description: |
+    Given an input string and a pattern, returns a result of 'match' with value
+    'true' if the input string matches the pattern, 'false' otherwise.
+
+    NOTE 0
+    ------
+    This task is designed to work around the fact that Tekton task 'when' statements can
+    currently (as of 10/20) only do equals comparisons.
+
+    NOTE 1
+    ------
+    Wanted to make it so user could pass an array of patterns, but the array param type
+    can't be used in the `script` block or the `env` block so no way to get the array
+    into the scirpt.
+
+    SEE
+    ---
+    * https://github.com/tektoncd/pipeline/issues/3468
+    * https://github.com/tektoncd/pipeline/blob/master/docs/tasks.md#substituting-array-parameters
+    * https://github.com/tektoncd/pipeline/issues/2374
+
+  params:
+  - name: verbose
+    description: log the commands used during execution
+    type: string
+    default: "false"
+  - name: image
+    type: string
+    description: |
+      Container image to run the steps of this task in.
+    default: ubi8-minimal
+  # NOTE: See https://github.com/tektoncd/pipeline/issues/3423
+  #- name: imagePullPolicy
+  #  type: string
+  #  description: |
+  #    Policy for pulling new versions of the given image.
+  #  default: IfNotPresent
+  - name: input
+    type: string
+    description: |
+      If this input string matches the given regex statements in the 'patterns' parameter
+      then this task will emit 'match' result of 'true', else 'false'.
+  - name: pattern
+    type: string
+    description: |
+      Regex pattern.
+
+      If the given 'input' string matches this Regex patterns then this task will
+      emit 'match' result of 'true', else 'false'.
+
+  results:
+  - name: matches
+    description: |
+      "true" if the given 'input' matches the given 'pattern', "false" otherwise.
+
+  steps:
+  - name: pattern-match
+    image: $(params.image)
+    # NOTE:
+    #   when https://github.com/tektoncd/pipeline/issues/3423 resolved
+    #   replace with $(params.imagePullPolicy)
+    imagePullPolicy: {{ $.Values.imagePullPolicy }}
+    {{- if $.Values.workflowWorkerRunAsUser }}
+    securityContext:
+      runAsUser: {{ $.Values.workflowWorkerRunAsUser | int }}
+    {{- end }}
+    env:
+    - name: VERBOSE
+      value: $()
+    script: |
+      #!/bin/sh
+      if [ "${VERBOSE}" == "true" ]; then set -x; else set +x; fi
+      set -eu -o pipefail
+
+      # get params
+      INPUT="$(params.input)"
+      PATTERNS="$(params.pattern)"
+
+      # determine if match
+      MATCHES="false"
+      for pattern in "${PATTERNS[@]}"; do
+        if [[ ${INPUT} =~ ${pattern} ]]; then
+        MATCHES="true"
+          break
+        fi
+      done
+
+      # return results
+      echo "(${INPUT} =~ ${pattern}) = ${MATCHES}"
+      echo -n "${MATCHES}" > $(results.matches.path)

@@ -1,0 +1,18 @@
+{{- if and $.Values.rbacCreate $.Values.workflowWorkerRunAsUser -}}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "ploigos-workflow-tekton-cluster-resources.sccName" . }}
+  labels:
+    {{- include "ploigos-workflow-tekton-cluster-resources.labels" . | nindent 4 }}
+rules:
+- apiGroups:
+  - security.openshift.io
+  resourceNames:
+  - {{ include "ploigos-workflow-tekton-cluster-resources.sccName" . }}
+  resources:
+  - securitycontextconstraints
+  verbs:
+  - use
+{{- end }}

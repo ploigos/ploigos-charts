@@ -1,0 +1,23 @@
+{{- if $.Values.global.eventListenerCreateIngress }}
+---
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: {{ include "ploigos-workflow-tekton.eventListenerIngressName" .}}
+  labels:
+    {{- include "ploigos-workflow.labels" . | nindent 4 }}
+  annotations:
+    route.openshift.io/termination: "edge"
+spec:
+  rules:
+  - host: {{ (required "Global Value is required: eventListenerIngressHost" $.Values.global.eventListenerIngressHost) }}
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ include "ploigos-workflow-tekton.eventListenerServiceName" .}}
+            port:
+              name: http-listener
+{{- end }}

@@ -1,0 +1,26 @@
+{{- if and $.Values.rbacCreate $.Values.workflowWorkerRunAsUser -}}
+---
+kind: SecurityContextConstraints
+apiVersion: security.openshift.io/v1
+metadata:
+  name: {{ include "ploigos-workflow-tekton-cluster-resources.sccName" . }}
+  labels:
+    {{- include "ploigos-workflow-tekton-cluster-resources.labels" . | nindent 4 }}
+  annotations:
+    kubernetes.io/description: Allows for runAsUser as UID {{ $.Values.workflowWorkerRunAsUser }}
+allowHostDirVolumePlugin: false
+allowHostIPC: false
+allowHostNetwork: false
+allowHostPID: false
+allowHostPorts: false
+allowPrivilegedContainer: false
+readOnlyRootFilesystem: false
+runAsUser:
+  type: MustRunAsRange
+  uidRangeMax: {{ $.Values.workflowWorkerRunAsUser | int }}
+  uidRangeMin: {{ $.Values.workflowWorkerRunAsUser | int }}
+seLinuxContext:
+  type: MustRunAs
+supplementalGroups:
+  type: RunAsAny
+{{- end }}

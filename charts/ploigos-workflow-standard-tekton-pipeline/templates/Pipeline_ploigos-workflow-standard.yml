@@ -1,0 +1,1272 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: {{ include "ploigos-workflow-tekton.pipelineName" . | quote }}
+  labels:
+    ploigos.dev/workflow: standard
+    {{- include "ploigos-workflow.labels" . | nindent 4 }}
+spec:
+  workspaces:
+  - name: home
+    description: |
+      Workspace for the container users home directory.
+  - name: app
+    description: |
+      Workspace to checkout the application this workflow is for and set as the working directory
+      for the step executions.
+  params:
+    - name: verbose
+      description: log any *sh commands used during execution
+      type: string
+      default: "false"
+    - name: appRepoUrl
+      description: |
+        URL to the application repository to run the pipeline for.
+      type: string
+    - name: appRepoRef
+      description: |
+        Git reference (tag, branch) of the application repository to run the pipeline for.
+      type: string
+    - name: appCloneSSLVerify
+      description: |
+        Passed to git-clone ClusterTask.
+        Defines if http.sslVerify should be set to true or false in the global git config
+      type: string
+      default: "true"
+    - name: stepRunnerConfigDir
+      description: |
+        Path to the Step Runner configuration to pass to the
+        Workflow Step Runner when running workflow steps.
+      type: string
+      default: ''
+    - name: pgpKeysSecretName
+      description: |
+        Name of the Kubernetes Secret containing the PGP private keys to import for use by SOPS
+        to decrypt encrypted Step Runner config.
+      type: string
+    - name: envNameDev
+      type: string
+      description: |
+        Name of the "Development" environment used in the Step Runner configuration
+        files and to pass to the Workflow Step Runner when running a step targeted to
+        the "Development" environment.
+      default: DEV
+    - name: envNameTest
+      type: string
+      description: |
+        Name of the "Test" environment used in the Step Runner configuration
+        files and to pass to the Workflow Step Runner when running a step targeted to
+        the "Test" environment.
+      default: TEST
+    - name: envNameProd
+      type: string
+      description: |
+        Name of the "Production" environment used in the Step Runner configuration
+        files and to pass to the Workflow Step Runner when running a step targeted to
+        the "Production" environment.
+      default: PROD
+    - name: ciOnlyGitRefPatterns
+      type: string
+      description: |
+        Regex pattern for git references that should only go through the
+        Continues Integration (CI) workflow.
+      default: "^$"
+    - name: devGitRefPatterns
+      type: string
+      description: |
+        Regex pattern for git references that should go through the
+        Continues Integration (CI) workflow and then the deployment to
+        "Development" environment(s) (IE: "DEV" environment) workflow.
+      default: "^feature/.+$|^PR-.+$"
+    - name: releaseGitRefPatterns
+      type: string
+      description: |
+        Regex pattern for git references that should go through the
+        Continues Integration (CI) workflow and then the deployment to
+        "Release" environment(s) (IE: "TEST" and then "PROD" environments) workflow.
+      default: "^main$"
+    - name: stepRunnerPackageName
+      type: string
+      description: |
+        Name of the python package to use as the Workflow Step Runner.
+      default: "tssc"
+    - name: stepRunnerUpdateLibrary
+      type: string
+      description: |
+        If 'true', then pull the Workflow Step Runner library source code and build it.
+        If 'false', use the version of the Workflow Step Runner library that is pre-installed
+        in the CI worker images.
+
+        If 'false' then the following parameters are ignored:
+          - 'stepRunnerLibSourceUrl'
+          - 'stepRunnerLibIndexUrl'
+          - 'stepRunnerLibExtraIndexUrl'
+          - 'stepRunnerLibVersion'
+      default: "false"
+    - name: stepRunnerLibIndexUrl
+      type: string
+      description: |
+        If 'stepRunnerUpdateLibrary' is true and 'stepRunnerLibSourceUrl' is not supplied then this
+        will be passed to pip as '--index-url' for installing the Workflow Step Runner library
+        and its dependencies.
+
+        NOTE
+        ----
+        PIP is indeterminate whether it will pull packages from '--index-url' or
+        '--extra-index-url', therefor be sure to specify 'stepRunnerLibVersion'
+        if trying to pull a specific version from a specific index.
+
+        SEE
+        ---
+        - https://pip.pypa.io/en/stable/reference/pip_install/#id48
+      default: "https://pypi.org/simple/"
+    - name: stepRunnerLibExtraIndexUrl
+      type: string
+      description: |
+        If 'stepRunnerUpdateLibrary' is true and 'stepRunnerLibSourceUrl' is not supplied then this
+        will be passed to pip as '--extra-index-url' for installing the Workflow Step Runner library
+        and its dependencies.
+
+        NOTE
+        ----
+        PIP is indeterminate whether it will pull packages from '--index-url' or
+        '--extra-index-url', therefor be sure to specify 'stepRunnerLibVersion'
+        if trying to pull a specific version from a specific index.
+
+        SEE
+        ---
+        - https://pip.pypa.io/en/stable/reference/pip_install/#id48
+      default: "https://pypi.org/simple/"
+    - name: stepRunnerLibVersion
+      type: string
+      description: |
+        If 'stepRunnerUpdateLibrary' is true and 'stepRunnerLibSourceUrl' is not supplied then this
+        will be passed to pip as as the version of the Workflow Step Runner library to install.
+
+        NOTE
+        ----
+        If not given pip will install the latest from either 'stepRunnerLibIndexUrl' or
+        'stepRunnerLibExtraIndexUrl' indeterminately.
+      default: ""
+    - name: stepRunnerLibSourceUrl
+      type: string
+      description: |
+        If none empty value given and 'stepRunnerUpdateLibrary' is true this will be used as the source
+        location to install the Workflow Step Runner library from rather then from a PEP 503 compliant
+        repository.
+
+        If given then the following parameters are ignored:
+          - 'stepRunnerLibIndexUrl'
+          - 'stepRunnerLibExtraIndexUrl'
+          - 'stepRunnerLibVersion'
+
+        EXAMPLES
+        --------
+        git+https://github.com/ploigos/ploigos-step-runner.git@feature/NAPSSPO-1018
+        installs from the public 'ploigos' fork from the 'feature/NAPSSPO-1018' branch.
+
+        git+https://gitea.internal.example.xyz/tools/ploigos-step-runner.git@main
+        installs from an internal fork of the step runner library from the 'main' branch.
+      default: ""
+    # NOTE: See https://github.com/tektoncd/pipeline/issues/3423
+    #- name: workflowWorkersImagePullPolicy
+    #  type: string
+    #  description: |
+    #    Policy for pulling new versions of the imageTag for the CI worker images
+    #    when running this pipeline.
+    #  default: IfNotPresent
+    - name: workflowWorkerImageDefault
+      type: string
+      description: |
+        Container image to use when creating a workflow worker
+        to run pipeline steps when no other specific container image has been
+        specified for that step.
+      default: tssc/tssc-base:latest
+    - name: workflowWorkerImageSourceClone
+      type: string
+      description: |
+        Container image to use when creating a workflow worker
+        to run pipeline steps when performing source clone step(s).
+      default: gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.12.1
+    - name: workflowWorkerImageUnitTest
+      type: string
+      description: |
+        Container image to use when creating a workflow worker
+        to run pipeline steps when performing unit test step(s).
+    - name: workflowWorkerImagePackage
+      type: string
+      description: |
+        Container image to use when creating a workflow worker
+        to run pipeline steps when performing package application step(s).
+    - name: workflowWorkerImageStaticCodeAnalysis
+      type: string
+      description: |
+        Container image to use when creating a workflow worker
+        to run pipeline steps when performing static code analysis step(s).
+      default: tssc/tssc-tool-sonar:latest
+    - name: workflowWorkerImagePushArtifacts
+      type: string
+      description: |
+        Container image to use when creating a workflow worker
+        to run pipeline steps when performing push push packaged artifacts step(s).
+    - name: workflowWorkerImageContainerOperations
+      type: string
+      description: |
+        Container image to use when creating a workflow worker
+        to run pipeline steps when performing container operations (build/push/etc) step(s).
+      default: tssc/tssc-tool-containers:latest
+    - name: workflowWorkerImageContainerImageStaticComplianceScan
+      type: string
+      description: |
+        Container image to use when creating a workflow worker
+        to run pipeline steps when performing container image static compliance scan step(s).
+      default: tssc/tssc-tool-openscap:latest
+    - name: workflowWorkerImageContainerImageStaticVulnerabilityScan
+      type: string
+      description: |
+        Container image to use when creating a workflow worker to run pipeline steps
+        when performing container image static vulnerability scan step(s).
+      default: tssc/tssc-tool-openscap:latest
+    - name: workflowWorkerImageDeploy
+      type: string
+      description: |
+        Container image to use when creating a workflow worker
+        to run pipeline steps when performing deploy step(s).
+      default: tssc/tssc-tool-argocd:latest
+    - name: workflowWorkerImageValidateEnvironmentConfiguraiton
+      type: string
+      description: |
+        Container image to use when creating a workflow worker
+        to run pipeline steps when performing validate environment configuration step(s).
+      default: tssc/tssc-tool-config-lint:latest
+    - name: workflowWorkerImageUAT
+      type: string
+      description: |
+        Container image to use when creating a workflow worker
+        to run pipeline steps when performing user acceptance tests (UAT) step(s).
+
+  tasks:
+  #########
+  # SETUP #
+  #########
+  - name: setup-stage-gate
+    taskRef:
+      kind: ClusterTask
+      name: pattern-matcher
+    params:
+    - name: verbose
+      value: $(params.verbose)
+    - name: input
+      value: $(params.appRepoRef)
+    - name: pattern
+      value: "$(params.ciOnlyGitRefPatterns)|$(params.devGitRefPatterns)|$(params.releaseGitRefPatterns)"
+
+  ####################
+  # Setup: App Clone #
+  ####################
+  - name: setup-app-clone
+    # WARNING: EPIC HACK/WORKAROUND
+    #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
+    #   SEE:
+    #   * https://github.com/tektoncd/pipeline/issues/3126
+    #   * https://github.com/tektoncd/pipeline/issues/2813
+    #   * https://github.com/tektoncd/pipeline/issues/3510
+    retries: 2
+
+    runAfter:
+    - setup-stage-gate
+    when:
+    - input: "$(tasks.setup-stage-gate.results.matches)"
+      operator: in
+      values: ["true"]
+    taskRef:
+      kind: ClusterTask
+      name: ploigos-git-clone
+    workspaces:
+    - name: output
+      workspace: app
+    params:
+    - name: verbose
+      value: $(params.verbose)
+    - name: image
+      value: $(params.workflowWorkerImageSourceClone)
+    - name: url
+      value: $(params.appRepoUrl)
+    - name: revision
+      value: $(params.appRepoRef)
+    - name: deleteExisting
+      value: "true"
+    - name: sslVerify
+      value: $(params.appCloneSSLVerify)
+    # NOTE: this is so that git wont end up in a detached head mode
+    - name: refspec
+      value: "+refs/heads/$(params.appRepoRef):$(params.appRepoRef)"
+
+  ######################
+  # Setup: Python venv #
+  ######################
+  - name: setup-python-venv
+    # WARNING: EPIC HACK/WORKAROUND
+    #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
+    #   SEE:
+    #   * https://github.com/tektoncd/pipeline/issues/3126
+    #   * https://github.com/tektoncd/pipeline/issues/2813
+    #   * https://github.com/tektoncd/pipeline/issues/3510
+    retries: 2
+
+    runAfter:
+    - setup-stage-gate
+    # NOTE:
+    #   this dependency is only here because of read/write once constraints of most PV/PVCs
+    #   if happening to be using storage that supports ReadWriteMany then the following steps
+    #   can run in parallel
+    #   * setup-app-clone
+    #   * setup-python-venv
+    #   * setup-import-pgp-keys
+    - setup-app-clone
+    when:
+    - input: "$(tasks.setup-stage-gate.results.matches)"
+      operator: in
+      values: ["true"]
+    taskRef:
+      kind: ClusterTask
+      name: ploigos-setup-python-venv
+    workspaces:
+    - name: home
+      workspace: home
+    params:
+    - name: verbose
+      value: $(params.verbose)
+    - name: image
+      value: $(params.workflowWorkerImageDefault)
+    - name: stepRunnerPackageName
+      value: $(params.stepRunnerPackageName)
+    - name: stepRunnerUpdateLibrary
+      value: $(params.stepRunnerUpdateLibrary)
+    - name: stepRunnerLibSourceUrl
+      value: $(params.stepRunnerLibSourceUrl)
+    - name: stepRunnerLibIndexUrl
+      value: $(params.stepRunnerLibIndexUrl)
+    - name: stepRunnerLibExtraIndexUrl
+      value: $(params.stepRunnerLibExtraIndexUrl)
+    - name: stepRunnerLibVersion
+      value: $(params.stepRunnerLibVersion)
+
+  ##########################
+  # Setup: Import PGP Keys #
+  ##########################
+  - name: setup-import-pgp-keys
+    # WARNING: EPIC HACK/WORKAROUND
+    #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
+    #   SEE:
+    #   * https://github.com/tektoncd/pipeline/issues/3126
+    #   * https://github.com/tektoncd/pipeline/issues/2813
+    #   * https://github.com/tektoncd/pipeline/issues/3510
+    retries: 2
+
+    runAfter:
+    - setup-stage-gate
+    # NOTE:
+    #   this dependency is only here because of read/write once constraints of most PV/PVCs
+    #   if happening to be using storage that supports ReadWriteMany then the following steps
+    #   can run in parallel
+    #   * setup-app-clone
+    #   * setup-python-venv
+    #   * setup-import-pgp-keys
+    - setup-python-venv
+    when:
+    - input: "$(tasks.setup-stage-gate.results.matches)"
+      operator: in
+      values: ["true"]
+    taskRef:
+      kind: ClusterTask
+      name: import-pgp-keys
+    workspaces:
+    - name: home
+      workspace: home
+    params:
+    - name: verbose
+      value: $(params.verbose)
+    - name: image
+      value: $(params.workflowWorkerImageDefault)
+    - name: pgpKeysSecretName
+      value: $(params.pgpKeysSecretName)
+
+  #########################
+  # Continues Integration #
+  #########################
+  - name: ci-stage-gate
+    runAfter:
+    - setup-app-clone
+    - setup-python-venv
+    - setup-import-pgp-keys
+    taskRef:
+      kind: ClusterTask
+      name: pattern-matcher
+    params:
+    - name: verbose
+      value: $(params.verbose)
+    - name: input
+      value: $(params.appRepoRef)
+    - name: pattern
+      value: "$(params.ciOnlyGitRefPatterns)|$(params.devGitRefPatterns)|$(params.releaseGitRefPatterns)"
+
+  #########################
+  # CI: Generate Metadata #
+  #########################
+  - name: ci-generate-metadata
+    # WARNING: EPIC HACK/WORKAROUND
+    #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
+    #   SEE:
+    #   * https://github.com/tektoncd/pipeline/issues/3126
+    #   * https://github.com/tektoncd/pipeline/issues/2813
+    #   * https://github.com/tektoncd/pipeline/issues/3510
+    retries: 2
+
+    runAfter:
+    - ci-stage-gate
+    when:
+    - input: "$(tasks.ci-stage-gate.results.matches)"
+      operator: in
+      values: ["true"]
+    taskRef:
+      kind: ClusterTask
+      name: ploigos-step-runner
+    workspaces:
+    - name: home
+      workspace: home
+    - name: app
+      workspace: app
+    params:
+    - name: verbose
+      value: $(params.verbose)
+    - name: image
+      value: $(params.workflowWorkerImageDefault)
+    - name: stepRunnerPackageName
+      value: $(params.stepRunnerPackageName)
+    - name: venvPath
+      value: $(tasks.setup-python-venv.results.venvPath)
+    - name: stepName
+      value: generate-metadata
+    - name: stepRunnerConfigDir
+      value: $(params.stepRunnerConfigDir)
+
+  #######################
+  # CI: Tag Source Code #
+  #######################
+  - name: ci-tag-source-code
+    # WARNING: EPIC HACK/WORKAROUND
+    #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
+    #   SEE:
+    #   * https://github.com/tektoncd/pipeline/issues/3126
+    #   * https://github.com/tektoncd/pipeline/issues/2813
+    #   * https://github.com/tektoncd/pipeline/issues/3510
+    retries: 2
+
+    runAfter:
+    - ci-generate-metadata
+    when:
+    - input: "$(tasks.ci-stage-gate.results.matches)"
+      operator: in
+      values: ["true"]
+    taskRef:
+      kind: ClusterTask
+      name: ploigos-step-runner
+    workspaces:
+    - name: home
+      workspace: home
+    - name: app
+      workspace: app
+    params:
+    - name: verbose
+      value: $(params.verbose)
+    - name: image
+      value: $(params.workflowWorkerImageDefault)
+    - name: stepRunnerPackageName
+      value: $(params.stepRunnerPackageName)
+    - name: venvPath
+      value: $(tasks.setup-python-venv.results.venvPath)
+    - name: stepName
+      value: tag-source
+    - name: stepRunnerConfigDir
+      value: $(params.stepRunnerConfigDir)
+
+  ######################
+  # CI: Run Unit Tests #
+  ######################
+  - name: ci-run-unit-tests
+    # WARNING: EPIC HACK/WORKAROUND
+    #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
+    #   SEE:
+    #   * https://github.com/tektoncd/pipeline/issues/3126
+    #   * https://github.com/tektoncd/pipeline/issues/2813
+    #   * https://github.com/tektoncd/pipeline/issues/3510
+    retries: 2
+
+    runAfter:
+    - ci-tag-source-code
+    when:
+    - input: "$(tasks.ci-stage-gate.results.matches)"
+      operator: in
+      values: ["true"]
+    taskRef:
+      kind: ClusterTask
+      name: ploigos-step-runner
+    workspaces:
+    - name: home
+      workspace: home
+    - name: app
+      workspace: app
+    params:
+    - name: verbose
+      value: $(params.verbose)
+    - name: image
+      value: $(params.workflowWorkerImageUnitTest)
+    - name: stepRunnerPackageName
+      value: $(params.stepRunnerPackageName)
+    - name: venvPath
+      value: $(tasks.setup-python-venv.results.venvPath)
+    - name: stepName
+      value: unit-test
+    - name: stepRunnerConfigDir
+      value: $(params.stepRunnerConfigDir)
+
+  ###########################
+  # CI: Package Application #
+  ###########################
+  - name: ci-package-application
+    # WARNING: EPIC HACK/WORKAROUND
+    #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
+    #   SEE:
+    #   * https://github.com/tektoncd/pipeline/issues/3126
+    #   * https://github.com/tektoncd/pipeline/issues/2813
+    #   * https://github.com/tektoncd/pipeline/issues/3510
+    retries: 2
+
+    runAfter:
+    - ci-run-unit-tests
+    when:
+    - input: "$(tasks.ci-stage-gate.results.matches)"
+      operator: in
+      values: ["true"]
+    taskRef:
+      kind: ClusterTask
+      name: ploigos-step-runner
+    workspaces:
+    - name: home
+      workspace: home
+    - name: app
+      workspace: app
+    params:
+    - name: verbose
+      value: $(params.verbose)
+    - name: image
+      value: $(params.workflowWorkerImagePackage)
+    - name: stepRunnerPackageName
+      value: $(params.stepRunnerPackageName)
+    - name: venvPath
+      value: $(tasks.setup-python-venv.results.venvPath)
+    - name: stepName
+      value: package
+    - name: stepRunnerConfigDir
+      value: $(params.stepRunnerConfigDir)
+
+  ############################
+  # CI: Static Code Analysis #
+  ############################
+  - name: ci-static-code-analysis
+    # WARNING: EPIC HACK/WORKAROUND
+    #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
+    #   SEE:
+    #   * https://github.com/tektoncd/pipeline/issues/3126
+    #   * https://github.com/tektoncd/pipeline/issues/2813
+    #   * https://github.com/tektoncd/pipeline/issues/3510
+    retries: 2
+
+    runAfter:
+    - ci-package-application
+    when:
+    - input: "$(tasks.ci-stage-gate.results.matches)"
+      operator: in
+      values: ["true"]
+    taskRef:
+      kind: ClusterTask
+      name: ploigos-step-runner
+    workspaces:
+    - name: home
+      workspace: home
+    - name: app
+      workspace: app
+    params:
+    - name: verbose
+      value: $(params.verbose)
+    - name: image
+      value: $(params.workflowWorkerImageStaticCodeAnalysis)
+    - name: stepRunnerPackageName
+      value: $(params.stepRunnerPackageName)
+    - name: venvPath
+      value: $(tasks.setup-python-venv.results.venvPath)
+    - name: stepName
+      value: static-code-analysis
+    - name: stepRunnerConfigDir
+      value: $(params.stepRunnerConfigDir)
+
+  ####################################
+  # CI: Push Artifacts to Repository #
+  ####################################
+  - name: ci-push-artifacts-to-repository
+    # WARNING: EPIC HACK/WORKAROUND
+    #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
+    #   SEE:
+    #   * https://github.com/tektoncd/pipeline/issues/3126
+    #   * https://github.com/tektoncd/pipeline/issues/2813
+    #   * https://github.com/tektoncd/pipeline/issues/3510
+    retries: 2
+
+    runAfter:
+    - ci-static-code-analysis
+    when:
+    - input: "$(tasks.ci-stage-gate.results.matches)"
+      operator: in
+      values: ["true"]
+    taskRef:
+      kind: ClusterTask
+      name: ploigos-step-runner
+    workspaces:
+    - name: home
+      workspace: home
+    - name: app
+      workspace: app
+    params:
+    - name: verbose
+      value: $(params.verbose)
+    - name: image
+      value: $(params.workflowWorkerImagePushArtifacts)
+    - name: stepRunnerPackageName
+      value: $(params.stepRunnerPackageName)
+    - name: venvPath
+      value: $(tasks.setup-python-venv.results.venvPath)
+    - name: stepName
+      value: push-artifacts
+    - name: stepRunnerConfigDir
+      value: $(params.stepRunnerConfigDir)
+
+  ##############################
+  # CI: Create Container Image #
+  ##############################
+  - name: ci-create-container-image
+    # WARNING: EPIC HACK/WORKAROUND
+    #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
+    #   SEE:
+    #   * https://github.com/tektoncd/pipeline/issues/3126
+    #   * https://github.com/tektoncd/pipeline/issues/2813
+    #   * https://github.com/tektoncd/pipeline/issues/3510
+    retries: 2
+
+    runAfter:
+    - ci-push-artifacts-to-repository
+    when:
+    - input: "$(tasks.ci-stage-gate.results.matches)"
+      operator: in
+      values: ["true"]
+    taskRef:
+      kind: ClusterTask
+      name: ploigos-step-runner
+    workspaces:
+    - name: home
+      workspace: home
+    - name: app
+      workspace: app
+    params:
+    - name: verbose
+      value: $(params.verbose)
+    - name: image
+      value: $(params.workflowWorkerImageContainerOperations)
+    - name: stepRunnerPackageName
+      value: $(params.stepRunnerPackageName)
+    - name: venvPath
+      value: $(tasks.setup-python-venv.results.venvPath)
+    - name: stepName
+      value: create-container-image
+    - name: stepRunnerConfigDir
+      value: $(params.stepRunnerConfigDir)
+
+  #####################################
+  # CI: Static Image Scan: Compliance #
+  #####################################
+  - name: ci-static-image-scan-compliance
+    # WARNING: EPIC HACK/WORKAROUND
+    #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
+    #   SEE:
+    #   * https://github.com/tektoncd/pipeline/issues/3126
+    #   * https://github.com/tektoncd/pipeline/issues/2813
+    #   * https://github.com/tektoncd/pipeline/issues/3510
+    retries: 2
+
+    runAfter:
+    - ci-create-container-image
+    when:
+    - input: "$(tasks.ci-stage-gate.results.matches)"
+      operator: in
+      values: ["true"]
+    taskRef:
+      kind: ClusterTask
+      name: ploigos-step-runner
+    workspaces:
+    - name: home
+      workspace: home
+    - name: app
+      workspace: app
+    params:
+    - name: verbose
+      value: $(params.verbose)
+    - name: image
+      value: $(params.workflowWorkerImageContainerImageStaticComplianceScan)
+    - name: stepRunnerPackageName
+      value: $(params.stepRunnerPackageName)
+    - name: venvPath
+      value: $(tasks.setup-python-venv.results.venvPath)
+    - name: stepName
+      value: container-image-static-compliance-scan
+    - name: stepRunnerConfigDir
+      value: $(params.stepRunnerConfigDir)
+
+  ########################################
+  # CI: Static Image Scan: Vulnerability #
+  ########################################
+  - name: ci-static-image-scan-vulnerability
+    # WARNING: EPIC HACK/WORKAROUND
+    #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
+    #   SEE:
+    #   * https://github.com/tektoncd/pipeline/issues/3126
+    #   * https://github.com/tektoncd/pipeline/issues/2813
+    #   * https://github.com/tektoncd/pipeline/issues/3510
+    retries: 2
+
+    runAfter:
+    - ci-create-container-image
+    # NOTE:
+    #   since we need to share the $HOME dir between tasks and Kube and Tekton don't like
+    #   two pods mounting the same PV as ready write, we can't run the vulnerability and compliance
+    #   tasks in parallel.
+    #
+    #   If we ever figure out another way to deal with this or have access to ReadWriteMany PVs
+    #   then we can make this parallel.
+    - ci-static-image-scan-compliance
+    when:
+    - input: "$(tasks.ci-stage-gate.results.matches)"
+      operator: in
+      values: ["true"]
+    taskRef:
+      kind: ClusterTask
+      name: ploigos-step-runner
+    workspaces:
+    - name: home
+      workspace: home
+    - name: app
+      workspace: app
+    params:
+    - name: verbose
+      value: $(params.verbose)
+    - name: image
+      value: $(params.workflowWorkerImageContainerImageStaticVulnerabilityScan)
+    - name: stepRunnerPackageName
+      value: $(params.stepRunnerPackageName)
+    - name: venvPath
+      value: $(tasks.setup-python-venv.results.venvPath)
+    - name: stepName
+      value: container-image-static-vulnerability-scan
+    - name: stepRunnerConfigDir
+      value: $(params.stepRunnerConfigDir)
+
+  ##################################################
+  # CI: Push Trusted Container Image to Repository #
+  ##################################################
+  - name: ci-push-trusted-container-image-to-repository
+    # WARNING: EPIC HACK/WORKAROUND
+    #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
+    #   SEE:
+    #   * https://github.com/tektoncd/pipeline/issues/3126
+    #   * https://github.com/tektoncd/pipeline/issues/2813
+    #   * https://github.com/tektoncd/pipeline/issues/3510
+    retries: 2
+
+    runAfter:
+    - ci-static-image-scan-vulnerability
+    - ci-static-image-scan-compliance
+    when:
+    - input: "$(tasks.ci-stage-gate.results.matches)"
+      operator: in
+      values: ["true"]
+    taskRef:
+      kind: ClusterTask
+      name: ploigos-step-runner
+    workspaces:
+    - name: home
+      workspace: home
+    - name: app
+      workspace: app
+    params:
+    - name: verbose
+      value: $(params.verbose)
+    - name: image
+      value: $(params.workflowWorkerImageContainerOperations)
+    - name: stepRunnerPackageName
+      value: $(params.stepRunnerPackageName)
+    - name: venvPath
+      value: $(tasks.setup-python-venv.results.venvPath)
+    - name: stepName
+      value: push-container-image
+    - name: stepRunnerConfigDir
+      value: $(params.stepRunnerConfigDir)
+
+  ####################################
+  # CI: Sign Trusted Container Image #
+  ####################################
+  - name: ci-sign-trusted-container-image
+    # WARNING: EPIC HACK/WORKAROUND
+    #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
+    #   SEE:
+    #   * https://github.com/tektoncd/pipeline/issues/3126
+    #   * https://github.com/tektoncd/pipeline/issues/2813
+    #   * https://github.com/tektoncd/pipeline/issues/3510
+    retries: 2
+
+    runAfter:
+    - ci-push-trusted-container-image-to-repository
+    when:
+    - input: "$(tasks.ci-stage-gate.results.matches)"
+      operator: in
+      values: ["true"]
+    taskRef:
+      kind: ClusterTask
+      name: ploigos-step-runner
+    workspaces:
+    - name: home
+      workspace: home
+    - name: app
+      workspace: app
+    params:
+    - name: verbose
+      value: $(params.verbose)
+    - name: image
+      value: $(params.workflowWorkerImageContainerOperations)
+    - name: stepRunnerPackageName
+      value: $(params.stepRunnerPackageName)
+    - name: venvPath
+      value: $(tasks.setup-python-venv.results.venvPath)
+    - name: stepName
+      value: sign-container-image
+    - name: stepRunnerConfigDir
+      value: $(params.stepRunnerConfigDir)
+
+  #######
+  # DEV #
+  #######
+  - name: dev-stage-gate
+    runAfter:
+    - ci-sign-trusted-container-image
+    taskRef:
+      kind: ClusterTask
+      name: pattern-matcher
+    params:
+    - name: verbose
+      value: $(params.verbose)
+    - name: input
+      value: $(params.appRepoRef)
+    - name: pattern
+      value: $(params.devGitRefPatterns)
+
+  #####################################
+  # DEV: Deploy or Update Environment #
+  #####################################
+  - name: dev-deploy-or-update-environment
+    # WARNING: EPIC HACK/WORKAROUND
+    #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
+    #   SEE:
+    #   * https://github.com/tektoncd/pipeline/issues/3126
+    #   * https://github.com/tektoncd/pipeline/issues/2813
+    #   * https://github.com/tektoncd/pipeline/issues/3510
+    retries: 2
+
+    runAfter:
+    - dev-stage-gate
+    when:
+    - input: "$(tasks.dev-stage-gate.results.matches)"
+      operator: in
+      values: ["true"]
+    taskRef:
+      kind: ClusterTask
+      name: ploigos-step-runner
+    workspaces:
+    - name: home
+      workspace: home
+    - name: app
+      workspace: app
+    params:
+    - name: verbose
+      value: $(params.verbose)
+    - name: image
+      value: $(params.workflowWorkerImageDeploy)
+    - name: stepRunnerPackageName
+      value: $(params.stepRunnerPackageName)
+    - name: venvPath
+      value: $(tasks.setup-python-venv.results.venvPath)
+    - name: stepName
+      value: deploy
+    - name: stepRunnerConfigDir
+      value: $(params.stepRunnerConfigDir)
+    - name: environment
+      value: $(params.envNameDev)
+
+  ###########################################
+  # DEV: Validate Environment Configuration #
+  ###########################################
+  - name: dev-validate-environment-configuration
+    # WARNING: EPIC HACK/WORKAROUND
+    #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
+    #   SEE:
+    #   * https://github.com/tektoncd/pipeline/issues/3126
+    #   * https://github.com/tektoncd/pipeline/issues/2813
+    #   * https://github.com/tektoncd/pipeline/issues/3510
+    retries: 2
+
+    runAfter:
+    - dev-deploy-or-update-environment
+    when:
+    - input: "$(tasks.dev-stage-gate.results.matches)"
+      operator: in
+      values: ["true"]
+    taskRef:
+      kind: ClusterTask
+      name: ploigos-step-runner
+    workspaces:
+    - name: home
+      workspace: home
+    - name: app
+      workspace: app
+    params:
+    - name: verbose
+      value: $(params.verbose)
+    - name: image
+      value: $(params.workflowWorkerImageValidateEnvironmentConfiguraiton)
+    - name: stepRunnerPackageName
+      value: $(params.stepRunnerPackageName)
+    - name: venvPath
+      value: $(tasks.setup-python-venv.results.venvPath)
+    - name: stepName
+      value: validate-environment-configuration
+    - name: stepRunnerConfigDir
+      value: $(params.stepRunnerConfigDir)
+    - name: environment
+      value: $(params.envNameDev)
+
+  ##################################
+  # DEV: Run User Acceptance Tests #
+  ##################################
+  - name: dev-run-user-acceptance-tests
+    # WARNING: EPIC HACK/WORKAROUND
+    #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
+    #   SEE:
+    #   * https://github.com/tektoncd/pipeline/issues/3126
+    #   * https://github.com/tektoncd/pipeline/issues/2813
+    #   * https://github.com/tektoncd/pipeline/issues/3510
+    retries: 2
+
+    runAfter:
+    - dev-validate-environment-configuration
+    when:
+    - input: "$(tasks.dev-stage-gate.results.matches)"
+      operator: in
+      values: ["true"]
+    taskRef:
+      kind: ClusterTask
+      name: ploigos-step-runner
+    workspaces:
+    - name: home
+      workspace: home
+    - name: app
+      workspace: app
+    params:
+    - name: verbose
+      value: $(params.verbose)
+    - name: image
+      value: $(params.workflowWorkerImageUAT)
+    - name: stepRunnerPackageName
+      value: $(params.stepRunnerPackageName)
+    - name: venvPath
+      value: $(tasks.setup-python-venv.results.venvPath)
+    - name: stepName
+      value: uat
+    - name: stepRunnerConfigDir
+      value: $(params.stepRunnerConfigDir)
+    - name: environment
+      value: $(params.envNameDev)
+
+  ########
+  # TEST #
+  ########
+  - name: test-stage-gate
+    # WARNING: EPIC HACK/WORKAROUND
+    #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
+    #   SEE:
+    #   * https://github.com/tektoncd/pipeline/issues/3126
+    #   * https://github.com/tektoncd/pipeline/issues/2813
+    #   * https://github.com/tektoncd/pipeline/issues/3510
+    retries: 2
+
+    runAfter:
+    # NOTE:
+    #   We would prefer to say this runs after the DEV stage finishes....
+    #   but....https://github.com/tektoncd/pipeline/issues/2127. Which means
+    #   If the DEV stage is skipped then this stage will be skipped too because the
+    #   dev-run-user-acceptance-tests task was skipped so the runAfter makes it so this step
+    #   would never run.
+    - ci-sign-trusted-container-image
+    #- dev-run-user-acceptance-tests
+    taskRef:
+      kind: ClusterTask
+      name: pattern-matcher
+    params:
+    - name: verbose
+      value: $(params.verbose)
+    - name: input
+      value: $(params.appRepoRef)
+    - name: pattern
+      value: $(params.releaseGitRefPatterns)
+
+  ######################################
+  # TEST: Deploy or Update Environment #
+  ######################################
+  - name: test-deploy-or-update-environment
+    # WARNING: EPIC HACK/WORKAROUND
+    #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
+    #   SEE:
+    #   * https://github.com/tektoncd/pipeline/issues/3126
+    #   * https://github.com/tektoncd/pipeline/issues/2813
+    #   * https://github.com/tektoncd/pipeline/issues/3510
+    retries: 2
+
+    runAfter:
+    - test-stage-gate
+    when:
+    - input: "$(tasks.test-stage-gate.results.matches)"
+      operator: in
+      values: ["true"]
+    taskRef:
+      kind: ClusterTask
+      name: ploigos-step-runner
+    workspaces:
+    - name: home
+      workspace: home
+    - name: app
+      workspace: app
+    params:
+    - name: verbose
+      value: $(params.verbose)
+    - name: image
+      value: $(params.workflowWorkerImageDeploy)
+    - name: stepRunnerPackageName
+      value: $(params.stepRunnerPackageName)
+    - name: venvPath
+      value: $(tasks.setup-python-venv.results.venvPath)
+    - name: stepName
+      value: deploy
+    - name: stepRunnerConfigDir
+      value: $(params.stepRunnerConfigDir)
+    - name: environment
+      value: $(params.envNameTest)
+
+  ############################################
+  # TEST: Validate Environment Configuration #
+  ############################################
+  - name: test-validate-environment-configuration
+    # WARNING: EPIC HACK/WORKAROUND
+    #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
+    #   SEE:
+    #   * https://github.com/tektoncd/pipeline/issues/3126
+    #   * https://github.com/tektoncd/pipeline/issues/2813
+    #   * https://github.com/tektoncd/pipeline/issues/3510
+    retries: 2
+
+    runAfter:
+    - test-deploy-or-update-environment
+    when:
+    - input: "$(tasks.test-stage-gate.results.matches)"
+      operator: in
+      values: ["true"]
+    taskRef:
+      kind: ClusterTask
+      name: ploigos-step-runner
+    workspaces:
+    - name: home
+      workspace: home
+    - name: app
+      workspace: app
+    params:
+    - name: verbose
+      value: $(params.verbose)
+    - name: image
+      value: $(params.workflowWorkerImageValidateEnvironmentConfiguraiton)
+    - name: stepRunnerPackageName
+      value: $(params.stepRunnerPackageName)
+    - name: venvPath
+      value: $(tasks.setup-python-venv.results.venvPath)
+    - name: stepName
+      value: validate-environment-configuration
+    - name: stepRunnerConfigDir
+      value: $(params.stepRunnerConfigDir)
+    - name: environment
+      value: $(params.envNameTest)
+
+  ###################################
+  # TEST: Run User Acceptance Tests #
+  ###################################
+  - name: test-run-user-acceptance-tests
+    # WARNING: EPIC HACK/WORKAROUND
+    #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
+    #   SEE:
+    #   * https://github.com/tektoncd/pipeline/issues/3126
+    #   * https://github.com/tektoncd/pipeline/issues/2813
+    #   * https://github.com/tektoncd/pipeline/issues/3510
+    retries: 2
+
+    runAfter:
+    - test-validate-environment-configuration
+    when:
+    - input: "$(tasks.test-stage-gate.results.matches)"
+      operator: in
+      values: ["true"]
+    taskRef:
+      kind: ClusterTask
+      name: ploigos-step-runner
+    workspaces:
+    - name: home
+      workspace: home
+    - name: app
+      workspace: app
+    params:
+    - name: verbose
+      value: $(params.verbose)
+    - name: image
+      value: $(params.workflowWorkerImageUAT)
+    - name: stepRunnerPackageName
+      value: $(params.stepRunnerPackageName)
+    - name: venvPath
+      value: $(tasks.setup-python-venv.results.venvPath)
+    - name: stepName
+      value: uat
+    - name: stepRunnerConfigDir
+      value: $(params.stepRunnerConfigDir)
+    - name: environment
+      value: $(params.envNameTest)
+
+  ########
+  # PROD #
+  ########
+  - name: prod-stage-gate
+    # WARNING: EPIC HACK/WORKAROUND
+    #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
+    #   SEE:
+    #   * https://github.com/tektoncd/pipeline/issues/3126
+    #   * https://github.com/tektoncd/pipeline/issues/2813
+    #   * https://github.com/tektoncd/pipeline/issues/3510
+    retries: 2
+
+    runAfter:
+    - test-run-user-acceptance-tests
+    taskRef:
+      kind: ClusterTask
+      name: pattern-matcher
+    params:
+    - name: verbose
+      value: $(params.verbose)
+    - name: input
+      value: $(params.appRepoRef)
+    - name: pattern
+      value: $(params.releaseGitRefPatterns)
+
+  ######################################
+  # PROD: Deploy or Update Environment #
+  ######################################
+  - name: prod-deploy-or-update-environment
+    # WARNING: EPIC HACK/WORKAROUND
+    #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
+    #   SEE:
+    #   * https://github.com/tektoncd/pipeline/issues/3126
+    #   * https://github.com/tektoncd/pipeline/issues/2813
+    #   * https://github.com/tektoncd/pipeline/issues/3510
+    retries: 2
+
+    runAfter:
+    - prod-stage-gate
+    when:
+    - input: "$(tasks.prod-stage-gate.results.matches)"
+      operator: in
+      values: ["true"]
+    taskRef:
+      kind: ClusterTask
+      name: ploigos-step-runner
+    workspaces:
+    - name: home
+      workspace: home
+    - name: app
+      workspace: app
+    params:
+    - name: verbose
+      value: $(params.verbose)
+    - name: image
+      value: $(params.workflowWorkerImageDeploy)
+    - name: stepRunnerPackageName
+      value: $(params.stepRunnerPackageName)
+    - name: venvPath
+      value: $(tasks.setup-python-venv.results.venvPath)
+    - name: stepName
+      value: deploy
+    - name: stepRunnerConfigDir
+      value: $(params.stepRunnerConfigDir)
+    - name: environment
+      value: $(params.envNameProd)
+
+  ############################################
+  # PROD: Validate Environment Configuration #
+  ############################################
+  - name: prod-validate-environment-configuration
+    # WARNING: EPIC HACK/WORKAROUND
+    #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
+    #   SEE:
+    #   * https://github.com/tektoncd/pipeline/issues/3126
+    #   * https://github.com/tektoncd/pipeline/issues/2813
+    #   * https://github.com/tektoncd/pipeline/issues/3510
+    retries: 2
+
+    runAfter:
+    - prod-deploy-or-update-environment
+    when:
+    - input: "$(tasks.prod-stage-gate.results.matches)"
+      operator: in
+      values: ["true"]
+    taskRef:
+      kind: ClusterTask
+      name: ploigos-step-runner
+    workspaces:
+    - name: home
+      workspace: home
+    - name: app
+      workspace: app
+    params:
+    - name: verbose
+      value: $(params.verbose)
+    - name: image
+      value: $(params.workflowWorkerImageValidateEnvironmentConfiguraiton)
+    - name: stepRunnerPackageName
+      value: $(params.stepRunnerPackageName)
+    - name: venvPath
+      value: $(tasks.setup-python-venv.results.venvPath)
+    - name: stepName
+      value: validate-environment-configuration
+    - name: stepRunnerConfigDir
+      value: $(params.stepRunnerConfigDir)
+    - name: environment
+      value: $(params.envNameProd)

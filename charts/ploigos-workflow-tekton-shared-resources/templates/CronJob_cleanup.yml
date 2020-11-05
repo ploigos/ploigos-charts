@@ -1,0 +1,75 @@
+# SOURCE:
+#   https://gist.github.com/ctron/4764c0c4c4ea0b22353f2a23941928ad
+#
+# NOTES:
+#   This is a viable workaround to do pipeline cleanup until the Tekton has an "official"
+#   way to do this.
+#
+# RELATED:
+#   https://github.com/tektoncd/experimental/issues/479
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tekton-cleaner-{{ include "ploigos-workflow.resourcesName" . }}
+  labels:
+    {{- include "ploigos-workflow.labels" . | nindent 4 }}
+
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: tekton-cleaner-{{ include "ploigos-workflow.resourcesName" . }}
+  labels:
+    {{- include "ploigos-workflow.labels" . | nindent 4 }}
+rules:
+- apiGroups: ["tekton.dev"]
+  resources: ["pipelineruns"]
+  verbs: ["delete", "get", "watch", "list"]
+
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: cleaner-to-cleaner-{{ include "ploigos-workflow.resourcesName" . }}
+  labels:
+    {{- include "ploigos-workflow.labels" . | nindent 4 }}
+roleRef:
+  kind: Role
+  name: tekton-cleaner-{{ include "ploigos-workflow.resourcesName" . }}
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+  - kind: ServiceAccount
+    name: tekton-cleaner-{{ include "ploigos-workflow.resourcesName" . }}
+
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: {{ include "ploigos-workflow.cronJobCleanupName" . }}
+  labels:
+    {{- include "ploigos-workflow.labels" . | nindent 4 }}
+spec:
+  schedule: {{ $.Values.global.cleanupPipelineRunsSchedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: {{ $.Values.global.cleanupPipelineSuccessfulJobHistoryLimit | int }}
+  failedJobsHistoryLimit: {{ $.Values.global.cleanupPipelineFailedJobHistoryLimit | int }}
+  startingDeadlineSeconds: {{ $.Values.global.cleanupPipelineStartingDeadlineSeconds | int }}
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          serviceAccount: tekton-cleaner-{{ include "ploigos-workflow.resourcesName" . }}
+          containers:
+            - name: kubectl
+              image: {{ $.Values.global.cleanupPipelineCronJobImage }}
+              env:
+                - name: NUM_TO_KEEP
+                  value: {{ $.Values.global.cleanupPipelineRunsToKeep | quote }}
+              command:
+                - /bin/bash
+                - -c
+                - |
+                    TO_DELETE="$(kubectl get pipelinerun -o jsonpath='{range .items[?(@.status.completionTime)]}{.status.completionTime}{" "}{.metadata.name}{"\n"}{end}' | sort | head -n -${NUM_TO_KEEP} | awk '{ print $2}')"
+                    test -n "$TO_DELETE" && kubectl delete pipelinerun ${TO_DELETE} || true

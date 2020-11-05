@@ -1,0 +1,147 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: ClusterTask
+metadata:
+  name: ploigos-step-runner
+  labels:
+    {{- include "ploigos-workflow-tekton-cluster-resources.labels" . | nindent 4 }}
+  annotations:
+    tekton.dev/pipelines.minVersion: "0.14.0"
+    tekton.dev/tags: ploigos,python
+    tekton.dev/displayName: Workflow Step Runner
+spec:
+  description: |
+    Runs a given Ploigos step using the Workflow Step Runner library using the given
+    Step Runner configuration against an optional environment.
+  workspaces:
+  - name: home
+    mountPath: /home/tssc
+    description: |
+      Workspace for the container users home directory.
+  - name: app
+    description: |
+      Workspace with the checked out application in to use as the
+      working directory for the step execution.
+  params:
+  - name: verbose
+    description: log the commands used during execution
+    type: string
+    default: "false"
+  - name: image
+    type: string
+    description: |
+      Container image to run the steps of this task in.
+    default: ubi8-minimal
+  # NOTE: See https://github.com/tektoncd/pipeline/issues/3423
+  #- name: imagePullPolicy
+  #  type: string
+  #  description: |
+  #    Policy for pulling new versions of the given image.
+  #  default: IfNotPresent
+  - name: venvPath
+    type: string
+    description: |
+      Required.
+      Path to the virtual environment to activate and run this step in the context of.
+  - name: stepRunnerPackageName
+    type: string
+    description: |
+      Name of the python package to use as Step Runner.
+    default: "tssc"
+  - name: stepName
+    type: string
+    description: |
+      Required.
+      Name of the Workflow step for the Workflow Step Runner to run.
+  - name: stepRunnerConfigDir
+    type: string
+    description: |
+      Required.
+      Path to the Step Runner configuration to pass to the
+      Workflow Step Runner when running the step.
+  - name: environment
+    type: string
+    description: |
+      Optional.
+      Name of the environment to target when running the given step.
+
+      This should be equal to one of the environment names used in one or more of the
+      Step Runner configuration files in the given Step Runner configuration directory.
+    default: ""
+  - name: pauseForDebugBeforeStepRun
+    type: string
+    description: |
+      If "true" will pause before running the step so a workflow debugger can log into the
+      CI worker pod and look around
+    default: "false"
+
+  steps:
+  - name: workflow-step
+    image: $(params.image)
+    # NOTE:
+    #   when https://github.com/tektoncd/pipeline/issues/3423 resolved
+    #   replace with $(params.imagePullPolicy)
+    imagePullPolicy: {{ $.Values.imagePullPolicy }}
+    {{- if $.Values.workflowWorkerRunAsUser }}
+    securityContext:
+      runAsUser: {{ $.Values.workflowWorkerRunAsUser | int }}
+    {{- end }}
+    env:
+    - name: HOME
+      value: $(workspaces.home.path)
+    - name: VERBOSE
+      value: $(params.verbose)
+    - name: PAUSE_FOR_DEBUG_BEFORE_STEP_RUN
+      value: $(params.pauseForDebugBeforeStepRun)
+    workingDir: $(workspaces.app.path)
+    script: |
+      #!/bin/sh
+      if [ "${VERBOSE}" == "true" ]; then set -x; else set +x; fi
+      set -eu -o pipefail
+
+      echo "***********************************************************************************************************************************"
+      echo "* EPIC HACK/WORKDAROUND FOR DUPLICATE TaskRun BEING CREATED CAUSING PERMISSIONS ISSUES WITH PVC MOUNTED IN THE DUPLICATE TaskRuns *"
+      echo "***********************************************************************************************************************************"
+      echo "SEE:"
+      echo "* https://github.com/tektoncd/pipeline/issues/3126"
+      echo "* https://github.com/tektoncd/pipeline/issues/2813"
+      echo "* https://github.com/tektoncd/pipeline/issues/3510"
+      echo "Check if can 'ls -al $HOME', if not then will throw error and retry this task"
+      ls -al $HOME
+
+      if [ "${PAUSE_FOR_DEBUG_BEFORE_STEP_RUN}" == "true" ]; then
+        echo "********************"
+        echo "* PAUSED FOR DEBUG *"
+        echo "********************"
+        echo "To continue:"
+        echo "> touch ${HOME}/workflow-continue"
+
+        while [ ! -f ${HOME}/workflow-continue ]; do
+          sleep 2
+        done
+        rm -f ${HOME}/workflow-continue
+      fi
+
+      # REASONS:
+      #   * https://github.com/tektoncd/pipeline/issues/3509
+      passwd_home=$(getent passwd $(whoami) | cut -d: -f6)
+      if [ "$(stat -c %a ${passwd_home}/.ssh)" != "700" ]; then
+        echo "****************************"
+        echo "* Fix .ssh dir permissions *"
+        echo "****************************"
+
+        chmod 700 ${passwd_home}/.ssh
+        chmod 644 ${passwd_home}/.ssh/known_hosts
+        chmod 644 ${passwd_home}/.ssh/config
+        chmod 600 ${passwd_home}/.ssh/id_*
+      fi
+
+      echo "************"
+      echo "* Run Step *"
+      echo "************"
+      source $(params.venvPath)/bin/activate
+
+      python -m $(params.stepRunnerPackageName) \
+          --config "$(params.stepRunnerConfigDir)" \
+          --step "$(params.stepName)" \
+          --environment "$(params.environment)"

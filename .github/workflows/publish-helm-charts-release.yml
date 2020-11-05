@@ -1,0 +1,233 @@
+---
+name: "Publish Helm Charts: Release"
+
+on:
+  release:
+    types:
+    - published
+
+jobs:
+  # NOTE:
+  #   * currently no way to filter on release actions
+  #   * don't want to react to every releasee since the Helm Chart release creates releases
+  #   * don't want to do do on tags with that filter since this workflow will update the release
+  #     tag and would cause infinte actions to kick off
+  check-if-valid-publish-event:
+    runs-on: ubuntu-latest
+    outputs:
+      execute-workflow: ${{ steps.execute-workflow.outputs.execute-workflow }}
+    steps:
+    - name: Check if release should trigger this workflow ✅
+      id: execute-workflow
+      run: |
+        if [[ ${GITHUB_REF} =~ v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+          CONTINUE="true"
+        else
+          CONTINUE="false"
+        fi
+
+        echo "::set-output name=execute-workflow::${CONTINUE}"
+
+  setup:
+    runs-on: ubuntu-latest
+    needs:
+    - check-if-valid-publish-event
+    if: needs.check-if-valid-publish-event.outputs.execute-workflow == 'true'
+    outputs:
+      helm-charts: ${{ steps.helm-charts.outputs.helm-charts }}
+      helm-charts-new-semver: ${{ steps.helm-chart-semver.outputs.fullversion }}
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v2
+
+      - name: Determine Helm Charts to release ⚙️
+        id: helm-charts
+        run: |
+          HELM_CHARTS=$(python -c 'import os, json; print json.dumps(os.listdir("charts/"))')
+          echo "::set-output name=helm-charts::${HELM_CHARTS}"
+
+      - name: Determine Helm Chart Version ⚙️
+        id: helm-chart-semver
+        uses: booxmedialtd/ws-action-parse-semver@v1
+        with:
+          input_string: "${{ github.ref }}"
+          version_extractor_regex: '\/v(.*)$'
+
+  lint:
+    runs-on: ubuntu-latest
+    needs:
+    - setup
+    strategy:
+      fail-fast: false
+    steps:
+    - name: Checkout 🛎️
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Setup Helm 🧰
+      uses: azure/setup-helm@v1
+      with:
+        version: v3.4.1
+
+    - name: Setup Python 🧰🐍
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.7
+
+    - name: Setup chart-testing 🧰
+      uses: helm/chart-testing-action@v2.0.1
+
+    # NOTE:
+    #   --validate-chart-schema=false due to https://github.com/helm/chart-testing/pull/300
+    - name: Lint with chart-testing 🧪🖋
+      run: |
+        ct lint \
+          --all \
+          --validate-maintainers=false \
+          --validate-chart-schema=false
+
+  install-test:
+    runs-on: ubuntu-latest
+    needs:
+    - setup
+    steps:
+    - name: Checkout 🛎️
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Setup Helm 🧰
+      uses: azure/setup-helm@v1
+      with:
+        version: v3.4.1
+
+    - name: Setup Python 🐍
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.7
+
+    - name: Setup chart-testing 🧰
+      uses: helm/chart-testing-action@v2.0.1
+
+    - name: Setup kind cluster 🧰
+      uses: helm/kind-action@v1.1.0
+
+    - name: Configure Kubernetes 🧰
+      run: |
+        echo "Install ingress controller"
+        helm repo add haproxy-ingress https://haproxy-ingress.github.io/charts
+        helm install haproxy-ingress haproxy-ingress/haproxy-ingress \
+          --create-namespace --namespace=ingress-controller \
+          --set controller.hostNetwork=true
+
+        echo "Install tekton"
+        kubectl apply --filename https://storage.googleapis.com/tekton-releases/pipeline/previous/v0.16.3/release.yaml
+        kubectl apply --filename https://storage.googleapis.com/tekton-releases/triggers/previous/v0.8.1/release.yaml
+
+    - name: Test install with chart-testing 🧪
+      run: |
+        ct install \
+          --all
+
+  prepare-for-release:
+    runs-on: ubuntu-latest
+    needs:
+    - setup
+    - lint
+    - install-test
+    strategy:
+      matrix:
+        helm-chart: ${{ fromJson(needs.setup.outputs.helm-charts) }}
+    steps:
+    - name: Checkout 🛎️
+      uses: actions/checkout@v2
+
+    - name: Set up Python 🐍
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+
+    - name: Update Helm Chart version 🖋
+      uses: docker://mikefarah/yq
+      with:
+        args:
+          yq write --inplace charts/${{ matrix.helm-chart }}/Chart.yaml version ${{ needs.setup.outputs.helm-charts-new-semver }}
+
+    # NOTE: workaround for https://github.com/helm/chart-releaser/issues/95
+    - name: Create Chart.lock ⚙️
+      run: |
+        helm dependency update charts/${{ matrix.helm-chart }}
+
+    # NOTE:
+    #  Chart.lock uploaded as workaround for https://github.com/helm/chart-releaser/issues/95
+    - name: Upload Helm Chart prepared for release 🔺
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ matrix.helm-chart }}
+        path: |
+          charts/${{ matrix.helm-chart }}/Chart.yaml
+          charts/${{ matrix.helm-chart }}/Chart.lock
+
+  release:
+    runs-on: ubuntu-latest
+    needs:
+    - setup
+    - prepare-for-release
+    steps:
+    - name: Checkout 🛎️
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Configure Git 🛠
+      run: |
+        git config user.name "$GITHUB_ACTOR"
+        git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+    - name: Download Helm Charts prepared to release 🔻
+      id: download-helm-charts
+      uses: actions/download-artifact@v2
+      with:
+        path: charts
+
+    - name: Push Updated Helm Chart Verions 💾
+      uses: github-actions-x/commit@v2.7
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        push-branch: main
+        commit-message: 'Updated Helm Chart versions for release: v${{ needs.setup.outputs.helm-charts-new-semver }}'
+
+    - name: Setup Helm 🧰
+      uses: azure/setup-helm@v1
+      with:
+        version: v3.4.1
+
+    - name: Run chart-releaser 🚀
+      uses: helm/chart-releaser-action@v1.1.0
+      env:
+        CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+
+    # NOTE:
+    #   it is important this happens after the run of the chart-releaser so  that
+    #   the cr tool can detect changes from the last tag (the tag that triggered this run)
+    #   and this release.
+    - name: Update triggering release git tag to included updated Helm Chart versions 🖋
+      run: |
+        git tag -d v${{ needs.setup.outputs.helm-charts-new-semver }}
+        git tag v${{ needs.setup.outputs.helm-charts-new-semver }}
+        git push origin v${{ needs.setup.outputs.helm-charts-new-semver }} --force
+
+  update-release-tags:
+    runs-on: ubuntu-latest
+    needs:
+    - release
+    steps:
+    - name: Checkout 🛎️
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+        ref: main
+
+    - name: Update release tags for latest major and minor releases 🖋
+      uses: bewuethr/release-tracker-action@v1

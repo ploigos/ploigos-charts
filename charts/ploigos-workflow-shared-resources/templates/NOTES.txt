@@ -1,0 +1,7 @@
+*************************************
+* ploigos-workflow-shared-resources *
+*************************************
+
+Installed Ploigos Workflow Shared resources
+* Workflow Service Account: {{ include "ploigos-workflow.workflowServiceAccountName" . }}
+* PGP Keys Secret: {{ include "ploigos-workflow.pgpKeysSecretName" . }}
