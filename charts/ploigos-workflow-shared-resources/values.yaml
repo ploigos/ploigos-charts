@@ -46,8 +46,8 @@ global:
   # NOTE:
   #  The quay.io/ploigos/ploigos-base image uses UID 1001 but if you don't like that UID
   #  then you can use https://github.com/ploigos/ploigos-containers to create custom
-  #  versions of the tssc containers and passing in the container ARG `PLOIGOS_USER_UID` to
-  #  change the UID.
+  #  versions of the Ploigos workflow containers and passing in the container ARG
+  #  `PLOIGOS_USER_UID` to change the UID.
   workflowWorkerRunAsUser: 1001
   # workflowWorkerRunAsUserRoleName is the name of the Kubernetes Role that has permissions
   # to run as the UID specified with workflowWorkerRunAsUser.
