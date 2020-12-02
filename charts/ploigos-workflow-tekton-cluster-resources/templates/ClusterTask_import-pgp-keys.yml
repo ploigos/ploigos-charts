@@ -11,7 +11,7 @@ metadata:
 spec:
   workspaces:
   - name: home
-    mountPath: /home/tssc
+    mountPath: /home/ploigos
     description: |
       Workspace for the container users home directory.
 
@@ -26,7 +26,7 @@ spec:
     type: string
     description: |
       Container image to run the steps of this task in.
-    default: tssc/tssc-base:latest
+    default: ploigos/ploigos-base:latest
   # NOTE: See https://github.com/tektoncd/pipeline/issues/3423
   #- name: imagePullPolicy
   #  type: string

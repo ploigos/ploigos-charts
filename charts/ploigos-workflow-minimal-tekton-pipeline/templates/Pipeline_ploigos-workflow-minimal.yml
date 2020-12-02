@@ -182,29 +182,19 @@ spec:
       description: |
         Container image to use when creating a workflow worker
         to run pipeline steps when no other specific container image has been specified for that step.
-      default: tssc/tssc-base:latest
+      default: ploigos/ploigos-base:latest
     - name: workflowWorkerImageSourceClone
       type: string
       description: |
         Container image to use when creating a workflow worker
         to run pipeline steps when performing source clone step(s).
       default: gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.12.1
-    - name: workflowWorkerImageUnitTest
-      type: string
-      description: |
-        Container image to use when creating a workflow worker
-        to run pipeline steps when performing unit test step(s).
     - name: workflowWorkerImagePackage
       type: string
       description: |
         Container image to use when creating a workflow worker
         to run pipeline steps when performing package application step(s).
-    - name: workflowWorkerImageStaticCodeAnalysis
-      type: string
-      description: |
-        Container image to use when creating a workflow worker
-        to run pipeline steps when performing static code analysis step(s).
-      default: tssc/tssc-tool-sonar:latest
+      default: ploigos/ploigos-tool-sonar:latest
     - name: workflowWorkerImagePushArtifacts
       type: string
       description: |
@@ -215,36 +205,13 @@ spec:
       description: |
         Container image to use when creating a workflow worker
         to run pipeline steps when performing container operations (build/push/etc) step(s).
-      default: tssc/tssc-tool-containers:latest
-    - name: workflowWorkerImageContainerImageStaticComplianceScan
-      type: string
-      description: |
-        Container image to use when creating a workflow worker
-        to run pipeline steps when performing container image static compliance scan step(s).
-      default: tssc/tssc-tool-openscap:latest
-    - name: workflowWorkerImageContainerImageStaticVulnerabilityScan
-      type: string
-      description: |
-        Container image to use when creating a workflow worker to run pipeline steps
-        when performing container image static vulnerability scan step(s).
-      default: tssc/tssc-tool-openscap:latest
+      default: ploigos/ploigos-tool-containers:latest
     - name: workflowWorkerImageDeploy
       type: string
       description: |
         Container image to use when creating a workflow worker
         to run pipeline steps when performing deploy step(s).
-      default: tssc/tssc-tool-argocd:latest
-    - name: workflowWorkerImageValidateEnvironmentConfiguraiton
-      type: string
-      description: |
-        Container image to use when creating a workflow worker
-        to run pipeline steps when performing validate environment configuration step(s).
-      default: tssc/tssc-tool-config-lint:latest
-    - name: workflowWorkerImageUAT
-      type: string
-      description: |
-        Container image to use when creating a workflow worker
-        to run pipeline steps when performing user acceptance tests (UAT) step(s).
+      default: ploigos/ploigos-tool-argocd:latest
 
   tasks:
   #########

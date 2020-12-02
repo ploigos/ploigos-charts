@@ -5,12 +5,12 @@ global:
 
   stepRunnerConfigDir: cicd/step-runner-config
 
-  workflowWorkerImageDefault: quay.io/tssc/tssc-base:latest
-  workflowWorkerImageUnitTest: quay.io/tssc/tssc-tool-maven:nightly
-  workflowWorkerImagePackage: quay.io/tssc/tssc-tool-maven:nightly
-  workflowWorkerImageStaticCodeAnalysis: quay.io/tssc/tssc-tool-sonar:nightly
-  workflowWorkerImagePushArtifacts: quay.io/tssc/tssc-tool-maven:nightly
-  workflowWorkerImageUAT: quay.io/tssc/tssc-tool-maven:nightly
+  workflowWorkerImageDefault: quay.io/ploigos/ploigos-base:latest
+  workflowWorkerImageUnitTest: quay.io/ploigos/ploigos-tool-maven:nightly
+  workflowWorkerImagePackage: quay.io/ploigos/ploigos-tool-maven:nightly
+  workflowWorkerImageStaticCodeAnalysis: quay.io/ploigos/ploigos-tool-sonar:nightly
+  workflowWorkerImagePushArtifacts: quay.io/ploigos/ploigos-tool-maven:nightly
+  workflowWorkerImageUAT: quay.io/ploigos/ploigos-tool-maven:nightly
 
   # NOTE:
   #   have to test with ingress since GitHub action tests on 'kind' server where routes don't

@@ -5,9 +5,9 @@ global:
 
   stepRunnerConfigDir: cicd/step-runner-config
 
-  workflowWorkerImageDefault: quay.io/tssc/tssc-base:latest
-  workflowWorkerImagePackage: quay.io/tssc/tssc-tool-maven:nightly
-  workflowWorkerImagePushArtifacts: quay.io/tssc/tssc-tool-maven:nightly
+  workflowWorkerImageDefault: quay.io/ploigos/ploigos-base:latest
+  workflowWorkerImagePackage: quay.io/ploigos/ploigos-tool-maven:nightly
+  workflowWorkerImagePushArtifacts: quay.io/ploigos/ploigos-tool-maven:nightly
 
   # NOTE:
   #   have to test with ingress since GitHub action tests on 'kind' server where routes don't

@@ -84,7 +84,7 @@ global:
   # This image must have the 'kubectl' binary installed compatible with the Kubernetes Cluster
   # the CronJob is running on.
   # Required.
-  cleanupPipelineCronJobImage: tssc/tssc-base:latest
+  cleanupPipelineCronJobImage: ploigos/ploigos-base:latest
 
   # stepRunnerPackageName is the name of the python package to use as the Workflow Step Runner.
   stepRunnerPackageName: tssc
@@ -239,10 +239,10 @@ global:
   #  container builds within a container.
   #
   # NOTE:
-  #  The quay.io/ploigos/ploigos-base image uses UID 1001 but if you don't like that UID
-  #  then you can use https://github.com/ploigos/ploigos-containers to create custom
-  #  versions of the tssc containers and passing in the container ARG `PLOIGOS_USER_UID` to
-  #  change the UID.
+  # The quay.io/ploigos/ploigos-base image uses UID 1001 but if you don't like that UID
+  # then you can use https://github.com/ploigos/ploigos-containers to create custom
+  # versions of the Ploigos workflow containers and passing in the container ARG
+  # `PLOIGOS_USER_UID` to change the UID.
   workflowWorkerRunAsUser: 1001
   # workflowWorkerRunAsUserRoleName is the name of the Kubernetes Role that has permissions
   # to run as the UID specified with workflowWorkerRunAsUser.
@@ -252,7 +252,7 @@ global:
 
   # workflowWorkerImageDefault is the container image to use when creating a workflow worker
   # to run pipeline steps when no other specific container image has been specified for that step.
-  workflowWorkerImageDefault: tssc/tssc-base:latest
+  workflowWorkerImageDefault: ploigos/ploigos-base:latest
   # workflowWorkerImageSourceClone is the container image to use when creating a workflow worker
   # to run pipeline steps when performing source clone step(s).
   workflowWorkerImageSourceClone: 'gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.12.1'
@@ -265,10 +265,10 @@ global:
   # workflowWorkerImageContainerOperations is the
   # container image to use when creating a workflow worker
   # to run pipeline steps when performing container operations (build/push/etc) step(s).
-  workflowWorkerImageContainerOperations: tssc/tssc-tool-containers:latest
+  workflowWorkerImageContainerOperations: ploigos/ploigos-tool-containers:latest
   # workflowWorkerImageDeploy is the container image to use when creating a workflow worker
   # to run pipeline steps when performing deploy step(s).
-  workflowWorkerImageDeploy: tssc/tssc-tool-argocd:latest
+  workflowWorkerImageDeploy: ploigos/ploigos-tool-argocd:latest
 
   # tektonGitSSHKeys is a dictionary of private SSH keys to use with various
   # Git source control services.
@@ -281,7 +281,7 @@ global:
   #     - gitea-ext.gitea:2022
   #     - gitea.ploigos.xyz:2022
   #     known_hosts: | # values to put in known hosts to trust the the certificates from the Git server
-  #       [gitea.tssc.rht-set.com]:2022,[gitea-ext.gitea]:2022 ssh-rsa AAAAB3NzaC1yc2EAAAADAQAB...
+  #       [gitea.ploigos.xyz]:2022,[gitea-ext.gitea]:2022 ssh-rsa AAAAB3NzaC1yc2EAAAADAQAB...
   #     ssh-privatekey: | # SSH private key to use for authentication
   #       <recommend this value this be put in a SOPS encrypted yaml file>
   #
