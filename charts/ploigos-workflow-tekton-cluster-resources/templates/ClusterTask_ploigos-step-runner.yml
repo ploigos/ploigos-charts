@@ -47,7 +47,7 @@ spec:
     type: string
     description: |
       Name of the python package to use as Step Runner.
-    default: "tssc"
+    default: "ploigos-step-runner"
   - name: stepName
     type: string
     description: |
@@ -141,7 +141,7 @@ spec:
       echo "************"
       source $(params.venvPath)/bin/activate
 
-      python -m $(params.stepRunnerPackageName) \
+      psr \
           --config "$(params.stepRunnerConfigDir)" \
           --step "$(params.stepName)" \
           --environment "$(params.environment)"

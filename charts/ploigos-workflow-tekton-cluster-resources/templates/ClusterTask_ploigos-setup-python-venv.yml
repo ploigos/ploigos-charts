@@ -41,7 +41,7 @@ spec:
     description: |
       Name of the python package to install/update/verify as the Workflow Step Runner
       in the created python virtual environment.
-    default: "tssc"
+    default: "ploigos-step-runner"
   - name: stepRunnerUpdateLibrary
     type: string
     description: |
@@ -114,10 +114,10 @@ spec:
 
       EXAMPLES
       --------
-      git+https://github.com/rhtconsulting/tssc-python-package.git@feature/NAPSSPO-1018
-      installs from the public 'rhtconsulting' fork from the 'feature/NAPSSPO-1018' branch.
+      git+https://github.com/ploigos/ploigos-step-runner.git@feature/foo
+      installs from the public 'ploigos' fork from the 'feature/foo' branch.
 
-      git+https://gitea.internal.example.xyz/tools/tssc-python-package.git@main
+      git+https://gitea.internal.example.xyz/tools/ploigos-step-runner.git@main
       installs from an internal fork of the 'ploigos-step-runner' library from the 'main' branch.
     default: ""
   - name: venvName
@@ -237,7 +237,7 @@ spec:
             extraIndexUrlFlag="--extra-index-url  ${STEP_RUNNER_LIB_EXTRA_INDEX_URL}"
           fi
 
-          STEP_RUNNER_LIB_INSTALL_CMD="python -m pip install --upgrade ${STEP_RUNNER_LIB_INDEX_URL} ${STEP_RUNNER_LIB_EXTRA_INDEX_URL} ${STEP_RUNNER_PACKAGE_NAME}"
+          STEP_RUNNER_LIB_INSTALL_CMD="python -m pip install --upgrade ${indexUrlFlag} ${extraIndexUrlFlag} ${STEP_RUNNER_PACKAGE_NAME}"
 
           if [[ ${STEP_RUNNER_LIB_VERSION} ]]; then
             STEP_RUNNER_LIB_INSTALL_CMD+="==${STEP_RUNNER_LIB_VERSION}"

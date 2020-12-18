@@ -87,7 +87,7 @@ global:
   cleanupPipelineCronJobImage: ploigos/ploigos-base:latest
 
   # stepRunnerPackageName is the name of the python package to use as the Workflow Step Runner.
-  stepRunnerPackageName: tssc
+  stepRunnerPackageName: ploigos-step-runner
   # stepRunnerUpdateLibrary is whether or not to update the Workflow Step Runner Python library
   # installed in the workflow worker images.
   # If 'true', then pull the Workflow Step Runner library source code and build it.

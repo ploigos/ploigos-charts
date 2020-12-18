@@ -91,7 +91,7 @@ spec:
       type: string
       description: |
         Name of the python package to use as the Workflow Step Runner.
-      default: "tssc"
+      default: "ploigos-step-runner"
     - name: stepRunnerUpdateLibrary
       type: string
       description: |
@@ -389,7 +389,7 @@ spec:
     #   * https://github.com/tektoncd/pipeline/issues/3126
     #   * https://github.com/tektoncd/pipeline/issues/2813
     #   * https://github.com/tektoncd/pipeline/issues/3510
-    retries: 2
+    retries: 0
 
     runAfter:
     - ci-stage-gate
@@ -429,7 +429,7 @@ spec:
     #   * https://github.com/tektoncd/pipeline/issues/3126
     #   * https://github.com/tektoncd/pipeline/issues/2813
     #   * https://github.com/tektoncd/pipeline/issues/3510
-    retries: 2
+    retries: 0
 
     runAfter:
     - ci-generate-metadata
@@ -469,7 +469,7 @@ spec:
     #   * https://github.com/tektoncd/pipeline/issues/3126
     #   * https://github.com/tektoncd/pipeline/issues/2813
     #   * https://github.com/tektoncd/pipeline/issues/3510
-    retries: 2
+    retries: 0
 
     runAfter:
     - ci-tag-source-code
@@ -509,7 +509,7 @@ spec:
     #   * https://github.com/tektoncd/pipeline/issues/3126
     #   * https://github.com/tektoncd/pipeline/issues/2813
     #   * https://github.com/tektoncd/pipeline/issues/3510
-    retries: 2
+    retries: 0
 
     runAfter:
     - ci-package-application
@@ -549,7 +549,7 @@ spec:
     #   * https://github.com/tektoncd/pipeline/issues/3126
     #   * https://github.com/tektoncd/pipeline/issues/2813
     #   * https://github.com/tektoncd/pipeline/issues/3510
-    retries: 2
+    retries: 0
 
     runAfter:
     - ci-push-artifacts-to-repository
@@ -589,7 +589,7 @@ spec:
     #   * https://github.com/tektoncd/pipeline/issues/3126
     #   * https://github.com/tektoncd/pipeline/issues/2813
     #   * https://github.com/tektoncd/pipeline/issues/3510
-    retries: 2
+    retries: 0
 
     runAfter:
     - ci-create-container-image
@@ -646,7 +646,7 @@ spec:
     #   * https://github.com/tektoncd/pipeline/issues/3126
     #   * https://github.com/tektoncd/pipeline/issues/2813
     #   * https://github.com/tektoncd/pipeline/issues/3510
-    retries: 2
+    retries: 0
 
     runAfter:
     - dev-stage-gate
@@ -688,7 +688,7 @@ spec:
     #   * https://github.com/tektoncd/pipeline/issues/3126
     #   * https://github.com/tektoncd/pipeline/issues/2813
     #   * https://github.com/tektoncd/pipeline/issues/3510
-    retries: 2
+    retries: 0
 
     runAfter:
     # NOTE:
@@ -720,7 +720,7 @@ spec:
     #   * https://github.com/tektoncd/pipeline/issues/3126
     #   * https://github.com/tektoncd/pipeline/issues/2813
     #   * https://github.com/tektoncd/pipeline/issues/3510
-    retries: 2
+    retries: 0
 
     runAfter:
     - test-stage-gate
@@ -762,7 +762,7 @@ spec:
     #   * https://github.com/tektoncd/pipeline/issues/3126
     #   * https://github.com/tektoncd/pipeline/issues/2813
     #   * https://github.com/tektoncd/pipeline/issues/3510
-    retries: 2
+    retries: 0
 
     runAfter:
     - test-deploy-or-update-environment
@@ -787,7 +787,7 @@ spec:
     #   * https://github.com/tektoncd/pipeline/issues/3126
     #   * https://github.com/tektoncd/pipeline/issues/2813
     #   * https://github.com/tektoncd/pipeline/issues/3510
-    retries: 2
+    retries: 0
 
     runAfter:
     - prod-stage-gate
