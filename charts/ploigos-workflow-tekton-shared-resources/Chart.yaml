@@ -8,7 +8,7 @@ description: |
 type: application
 maintainers:
   - name: Red Hat, Inc.
-    email: tssc+ploigos@redhat.com
+    email: ploigos@redhat.com
 dependencies:
   - name: ploigos-workflow-shared-resources
     version: ">= 0.0.0 || >= 0.0.0-0"

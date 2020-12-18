@@ -6,6 +6,6 @@ description: |
 type: application
 maintainers:
   - name: Red Hat, Inc.
-    email: tssc+ploigos@redhat.com
+    email: ploigos@redhat.com
 # MANAGED BY: GitHub workflow
 version: 0.15.0
