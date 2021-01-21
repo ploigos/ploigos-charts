@@ -290,7 +290,7 @@ global:
   # https://github.com/tektoncd/pipeline/blob/master/docs/auth.md#configuring-ssh-auth-authentication-for-git
   tektonGitSSHKeys: {}
 
-  # Flag indicating that platform-level configuration is separate from 
+  # Flag indicating that platform-level configuration is separate from
   # app-level configuration, and that the ploigos-step-runner ClusterTask
   # should expect to find:
   # - Platform config mounted in /opt/ploigos-platform-config
