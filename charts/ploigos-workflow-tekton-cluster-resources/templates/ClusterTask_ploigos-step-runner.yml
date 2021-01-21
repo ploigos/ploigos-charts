@@ -22,6 +22,16 @@ spec:
     description: |
       Workspace with the checked out application in to use as the
       working directory for the step execution.
+  {{- if $.Values.separatePlatformConfig }}
+  - name: ploigos-platform-config
+    description: |
+      ConfigMap containing platform-level config
+    mountPath: /opt/platform-config
+  - name: ploigos-platform-config-secrets
+    description: |
+      Secret containing platform-level secrets
+    mountPath: /opt/platform-config-secrets
+  {{- end }}
   params:
   - name: verbose
     description: log the commands used during execution
@@ -125,6 +135,14 @@ spec:
       # REASONS:
       #   * https://github.com/tektoncd/pipeline/issues/3509
       passwd_home=$(getent passwd $(whoami) | cut -d: -f6)
+
+      if [ ! -d ${passwd_home}/.ssh ]; then
+        mkdir ${passwd_home}/.ssh
+        touch ${passwd_home}/.ssh/known_hosts
+        touch ${passwd_home}/.ssh/config
+        touch ${passwd_home}/.ssh/id_*
+      fi
+
       if [ "$(stat -c %a ${passwd_home}/.ssh)" != "700" ]; then
         echo "****************************"
         echo "* Fix .ssh dir permissions *"
@@ -142,6 +160,6 @@ spec:
       source $(params.venvPath)/bin/activate
 
       psr \
-          --config "$(params.stepRunnerConfigDir)" \
+          --config $(params.stepRunnerConfigDir) \
           --step "$(params.stepName)" \
           --environment "$(params.environment)"
