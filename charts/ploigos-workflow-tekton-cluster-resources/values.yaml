@@ -24,7 +24,7 @@ rbacCreate: true
 # resolved and this parameter can be passed at runtime.
 imagePullPolicy: IfNotPresent
 
-# Flag indicating that platform-level configuration is separate from 
+# Flag indicating that platform-level configuration is separate from
 # app-level configuration, and that the ploigos-step-runner ClusterTask
 # should expect to find:
 # - Platform config mounted in /opt/ploigos-platform-config
