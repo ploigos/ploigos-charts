@@ -207,10 +207,10 @@ jobs:
         print(f"::set-output name=next-semver::{next_semver}")
 
     - name: Update Helm Chart version 🖋
-      uses: docker://mikefarah/yq
+      uses: docker://mikefarah/yq:3
       with:
         args:
-          write --inplace charts/${{ matrix.helm-chart }}/Chart.yaml version ${{ steps.helm-chart-next-semver.outputs.next-semver }}
+          yq write --inplace charts/${{ matrix.helm-chart }}/Chart.yaml version ${{ steps.helm-chart-next-semver.outputs.next-semver }}
 
     # NOTE: workaround for https://github.com/helm/chart-releaser/issues/95
     - name: Create Chart.lock ⚙️
