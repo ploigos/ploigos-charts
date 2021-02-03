@@ -210,7 +210,7 @@ jobs:
       uses: docker://mikefarah/yq
       with:
         args:
-          yq write --inplace charts/${{ matrix.helm-chart }}/Chart.yaml version ${{ steps.helm-chart-next-semver.outputs.next-semver }}
+          write --inplace charts/${{ matrix.helm-chart }}/Chart.yaml version ${{ steps.helm-chart-next-semver.outputs.next-semver }}
 
     # NOTE: workaround for https://github.com/helm/chart-releaser/issues/95
     - name: Create Chart.lock ⚙️
