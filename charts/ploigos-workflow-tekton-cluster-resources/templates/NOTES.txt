@@ -8,7 +8,7 @@ Installed Following Cluster level resources:
 
 * ClusterTask
   - import-pgp-keys
-  - ploigos-setup-python-venv
+  - ploigos-setup-workflow-step-runner
   - ploigos-step-runner
   - pattern-matcher
     * temporary until https://github.com/tektoncd/pipeline/issues/3468 is resolved

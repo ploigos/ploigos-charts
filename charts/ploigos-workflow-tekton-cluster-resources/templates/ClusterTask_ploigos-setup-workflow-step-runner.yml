@@ -1,7 +1,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: ClusterTask
 metadata:
-  name: ploigos-setup-python-venv
+  name: ploigos-setup-workflow-step-runner
   labels:
     {{- include "ploigos-workflow-tekton-cluster-resources.labels" . | nindent 4 }}
   annotations:

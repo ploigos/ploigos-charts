@@ -311,10 +311,10 @@ spec:
     - name: refspec
       value: "+refs/heads/$(params.appRepoRef):$(params.appRepoRef)"
 
-  ######################
-  # Setup: Python venv #
-  ######################
-  - name: setup-python-venv
+  #####################################
+  # Setup: Setup Workflow Step Runner #
+  #####################################
+  - name: setup-workflow-step-runner
     # WARNING: EPIC HACK/WORKAROUND
     #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
     #   SEE:
@@ -330,8 +330,8 @@ spec:
     #   if happening to be using storage that supports ReadWriteMany then the following steps
     #   can run in parallel
     #   * setup-app-clone
-    #   * setup-python-venv
-    #   * setup-import-pgp-keys
+    #   * setup-workflow-step-runner
+    #   * setup-pgp-keys
     - setup-app-clone
     when:
     - input: "$(tasks.setup-stage-gate.results.matches)"
@@ -339,7 +339,7 @@ spec:
       values: ["true"]
     taskRef:
       kind: ClusterTask
-      name: ploigos-setup-python-venv
+      name: ploigos-setup-workflow-step-runner
     workspaces:
     - name: home
       workspace: home
@@ -361,10 +361,10 @@ spec:
     - name: stepRunnerLibVersion
       value: $(params.stepRunnerLibVersion)
 
-  ##########################
-  # Setup: Import PGP Keys #
-  ##########################
-  - name: setup-import-pgp-keys
+  ###################
+  # Setup: PGP Keys #
+  ###################
+  - name: setup-pgp-keys
     # WARNING: EPIC HACK/WORKAROUND
     #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
     #   SEE:
@@ -380,9 +380,9 @@ spec:
     #   if happening to be using storage that supports ReadWriteMany then the following steps
     #   can run in parallel
     #   * setup-app-clone
-    #   * setup-python-venv
-    #   * setup-import-pgp-keys
-    - setup-python-venv
+    #   * setup-workflow-step-runner
+    #   * setup-pgp-keys
+    - setup-workflow-step-runner
     when:
     - input: "$(tasks.setup-stage-gate.results.matches)"
       operator: in
@@ -407,8 +407,8 @@ spec:
   - name: ci-stage-gate
     runAfter:
     - setup-app-clone
-    - setup-python-venv
-    - setup-import-pgp-keys
+    - setup-workflow-step-runner
+    - setup-pgp-keys
     taskRef:
       kind: ClusterTask
       name: pattern-matcher
@@ -460,7 +460,7 @@ spec:
     - name: stepRunnerPackageName
       value: $(params.stepRunnerPackageName)
     - name: venvPath
-      value: $(tasks.setup-python-venv.results.venvPath)
+      value: $(tasks.setup-workflow-step-runner.results.venvPath)
     - name: stepName
       value: generate-metadata
     - name: stepRunnerConfigDir
@@ -506,7 +506,7 @@ spec:
     - name: stepRunnerPackageName
       value: $(params.stepRunnerPackageName)
     - name: venvPath
-      value: $(tasks.setup-python-venv.results.venvPath)
+      value: $(tasks.setup-workflow-step-runner.results.venvPath)
     - name: stepName
       value: tag-source
     - name: stepRunnerConfigDir
@@ -552,7 +552,7 @@ spec:
     - name: stepRunnerPackageName
       value: $(params.stepRunnerPackageName)
     - name: venvPath
-      value: $(tasks.setup-python-venv.results.venvPath)
+      value: $(tasks.setup-workflow-step-runner.results.venvPath)
     - name: stepName
       value: unit-test
     - name: stepRunnerConfigDir
@@ -598,7 +598,7 @@ spec:
     - name: stepRunnerPackageName
       value: $(params.stepRunnerPackageName)
     - name: venvPath
-      value: $(tasks.setup-python-venv.results.venvPath)
+      value: $(tasks.setup-workflow-step-runner.results.venvPath)
     - name: stepName
       value: package
     - name: stepRunnerConfigDir
@@ -644,16 +644,16 @@ spec:
     - name: stepRunnerPackageName
       value: $(params.stepRunnerPackageName)
     - name: venvPath
-      value: $(tasks.setup-python-venv.results.venvPath)
+      value: $(tasks.setup-workflow-step-runner.results.venvPath)
     - name: stepName
       value: static-code-analysis
     - name: stepRunnerConfigDir
       value: $(params.stepRunnerConfigDir)
 
-  ####################################
-  # CI: Push Artifacts to Repository #
-  ####################################
-  - name: ci-push-artifacts-to-repository
+  ######################################
+  # CI: Push Application to Repository #
+  ######################################
+  - name: ci-push-application-to-repository
     # WARNING: EPIC HACK/WORKAROUND
     #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
     #   SEE:
@@ -690,7 +690,7 @@ spec:
     - name: stepRunnerPackageName
       value: $(params.stepRunnerPackageName)
     - name: venvPath
-      value: $(tasks.setup-python-venv.results.venvPath)
+      value: $(tasks.setup-workflow-step-runner.results.venvPath)
     - name: stepName
       value: push-artifacts
     - name: stepRunnerConfigDir
@@ -709,7 +709,7 @@ spec:
     retries: 0
 
     runAfter:
-    - ci-push-artifacts-to-repository
+    - ci-push-application-to-repository
     when:
     - input: "$(tasks.ci-stage-gate.results.matches)"
       operator: in
@@ -736,7 +736,7 @@ spec:
     - name: stepRunnerPackageName
       value: $(params.stepRunnerPackageName)
     - name: venvPath
-      value: $(tasks.setup-python-venv.results.venvPath)
+      value: $(tasks.setup-workflow-step-runner.results.venvPath)
     - name: stepName
       value: create-container-image
     - name: stepRunnerConfigDir
@@ -782,7 +782,7 @@ spec:
     - name: stepRunnerPackageName
       value: $(params.stepRunnerPackageName)
     - name: venvPath
-      value: $(tasks.setup-python-venv.results.venvPath)
+      value: $(tasks.setup-workflow-step-runner.results.venvPath)
     - name: stepName
       value: container-image-static-compliance-scan
     - name: stepRunnerConfigDir
@@ -836,16 +836,16 @@ spec:
     - name: stepRunnerPackageName
       value: $(params.stepRunnerPackageName)
     - name: venvPath
-      value: $(tasks.setup-python-venv.results.venvPath)
+      value: $(tasks.setup-workflow-step-runner.results.venvPath)
     - name: stepName
       value: container-image-static-vulnerability-scan
     - name: stepRunnerConfigDir
       value: $(params.stepRunnerConfigDir)
 
-  ##################################################
-  # CI: Push Trusted Container Image to Repository #
-  ##################################################
-  - name: ci-push-trusted-container-image-to-repository
+  ##########################################
+  # CI: Push Container Image to Repository #
+  ##########################################
+  - name: ci-push-container-image-to-repository
     # WARNING: EPIC HACK/WORKAROUND
     #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
     #   SEE:
@@ -883,16 +883,16 @@ spec:
     - name: stepRunnerPackageName
       value: $(params.stepRunnerPackageName)
     - name: venvPath
-      value: $(tasks.setup-python-venv.results.venvPath)
+      value: $(tasks.setup-workflow-step-runner.results.venvPath)
     - name: stepName
       value: push-container-image
     - name: stepRunnerConfigDir
       value: $(params.stepRunnerConfigDir)
 
-  ####################################
-  # CI: Sign Trusted Container Image #
-  ####################################
-  - name: ci-sign-trusted-container-image
+  ############################
+  # CI: Sign Container Image #
+  ############################
+  - name: ci-sign-container-image
     # WARNING: EPIC HACK/WORKAROUND
     #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
     #   SEE:
@@ -902,7 +902,7 @@ spec:
     retries: 0
 
     runAfter:
-    - ci-push-trusted-container-image-to-repository
+    - ci-push-container-image-to-repository
     when:
     - input: "$(tasks.ci-stage-gate.results.matches)"
       operator: in
@@ -929,7 +929,7 @@ spec:
     - name: stepRunnerPackageName
       value: $(params.stepRunnerPackageName)
     - name: venvPath
-      value: $(tasks.setup-python-venv.results.venvPath)
+      value: $(tasks.setup-workflow-step-runner.results.venvPath)
     - name: stepName
       value: sign-container-image
     - name: stepRunnerConfigDir
@@ -940,7 +940,7 @@ spec:
   #######
   - name: dev-stage-gate
     runAfter:
-    - ci-sign-trusted-container-image
+    - ci-sign-container-image
     taskRef:
       kind: ClusterTask
       name: pattern-matcher
@@ -992,7 +992,7 @@ spec:
     - name: stepRunnerPackageName
       value: $(params.stepRunnerPackageName)
     - name: venvPath
-      value: $(tasks.setup-python-venv.results.venvPath)
+      value: $(tasks.setup-workflow-step-runner.results.venvPath)
     - name: stepName
       value: deploy
     - name: stepRunnerConfigDir
@@ -1040,7 +1040,7 @@ spec:
     - name: stepRunnerPackageName
       value: $(params.stepRunnerPackageName)
     - name: venvPath
-      value: $(tasks.setup-python-venv.results.venvPath)
+      value: $(tasks.setup-workflow-step-runner.results.venvPath)
     - name: stepName
       value: validate-environment-configuration
     - name: stepRunnerConfigDir
@@ -1088,7 +1088,7 @@ spec:
     - name: stepRunnerPackageName
       value: $(params.stepRunnerPackageName)
     - name: venvPath
-      value: $(tasks.setup-python-venv.results.venvPath)
+      value: $(tasks.setup-workflow-step-runner.results.venvPath)
     - name: stepName
       value: uat
     - name: stepRunnerConfigDir
@@ -1115,7 +1115,7 @@ spec:
     #   If the DEV stage is skipped then this stage will be skipped too because the
     #   dev-run-user-acceptance-tests task was skipped so the runAfter makes it so this step
     #   would never run.
-    - ci-sign-trusted-container-image
+    - ci-sign-container-image
     #- dev-run-user-acceptance-tests
     taskRef:
       kind: ClusterTask
@@ -1168,7 +1168,7 @@ spec:
     - name: stepRunnerPackageName
       value: $(params.stepRunnerPackageName)
     - name: venvPath
-      value: $(tasks.setup-python-venv.results.venvPath)
+      value: $(tasks.setup-workflow-step-runner.results.venvPath)
     - name: stepName
       value: deploy
     - name: stepRunnerConfigDir
@@ -1216,7 +1216,7 @@ spec:
     - name: stepRunnerPackageName
       value: $(params.stepRunnerPackageName)
     - name: venvPath
-      value: $(tasks.setup-python-venv.results.venvPath)
+      value: $(tasks.setup-workflow-step-runner.results.venvPath)
     - name: stepName
       value: validate-environment-configuration
     - name: stepRunnerConfigDir
@@ -1264,7 +1264,7 @@ spec:
     - name: stepRunnerPackageName
       value: $(params.stepRunnerPackageName)
     - name: venvPath
-      value: $(tasks.setup-python-venv.results.venvPath)
+      value: $(tasks.setup-workflow-step-runner.results.venvPath)
     - name: stepName
       value: uat
     - name: stepRunnerConfigDir
@@ -1337,7 +1337,7 @@ spec:
     - name: stepRunnerPackageName
       value: $(params.stepRunnerPackageName)
     - name: venvPath
-      value: $(tasks.setup-python-venv.results.venvPath)
+      value: $(tasks.setup-workflow-step-runner.results.venvPath)
     - name: stepName
       value: deploy
     - name: stepRunnerConfigDir
@@ -1385,7 +1385,7 @@ spec:
     - name: stepRunnerPackageName
       value: $(params.stepRunnerPackageName)
     - name: venvPath
-      value: $(tasks.setup-python-venv.results.venvPath)
+      value: $(tasks.setup-workflow-step-runner.results.venvPath)
     - name: stepName
       value: validate-environment-configuration
     - name: stepRunnerConfigDir
