@@ -241,14 +241,6 @@ spec:
   # Setup: App Clone #
   ####################
   - name: setup-app-clone
-    # WARNING: EPIC HACK/WORKAROUND
-    #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
-    #   SEE:
-    #   * https://github.com/tektoncd/pipeline/issues/3126
-    #   * https://github.com/tektoncd/pipeline/issues/2813
-    #   * https://github.com/tektoncd/pipeline/issues/3510
-    retries: 2
-
     runAfter:
     - setup-stage-gate
     when:
@@ -282,14 +274,6 @@ spec:
   # Setup: Setup Workflow Step Runner #
   #####################################
   - name: setup-workflow-step-runner
-    # WARNING: EPIC HACK/WORKAROUND
-    #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
-    #   SEE:
-    #   * https://github.com/tektoncd/pipeline/issues/3126
-    #   * https://github.com/tektoncd/pipeline/issues/2813
-    #   * https://github.com/tektoncd/pipeline/issues/3510
-    retries: 2
-
     runAfter:
     - setup-stage-gate
     # NOTE:
@@ -332,14 +316,6 @@ spec:
   # Setup: PGP Keys #
   ###################
   - name: setup-pgp-keys
-    # WARNING: EPIC HACK/WORKAROUND
-    #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
-    #   SEE:
-    #   * https://github.com/tektoncd/pipeline/issues/3126
-    #   * https://github.com/tektoncd/pipeline/issues/2813
-    #   * https://github.com/tektoncd/pipeline/issues/3510
-    retries: 2
-
     runAfter:
     - setup-stage-gate
     # NOTE:
@@ -391,14 +367,6 @@ spec:
   # CI: Generate Metadata #
   #########################
   - name: ci-generate-metadata
-    # WARNING: EPIC HACK/WORKAROUND
-    #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
-    #   SEE:
-    #   * https://github.com/tektoncd/pipeline/issues/3126
-    #   * https://github.com/tektoncd/pipeline/issues/2813
-    #   * https://github.com/tektoncd/pipeline/issues/3510
-    retries: 0
-
     runAfter:
     - ci-stage-gate
     when:
@@ -437,14 +405,6 @@ spec:
   # CI: Tag Source Code #
   #######################
   - name: ci-tag-source-code
-    # WARNING: EPIC HACK/WORKAROUND
-    #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
-    #   SEE:
-    #   * https://github.com/tektoncd/pipeline/issues/3126
-    #   * https://github.com/tektoncd/pipeline/issues/2813
-    #   * https://github.com/tektoncd/pipeline/issues/3510
-    retries: 0
-
     runAfter:
     - ci-generate-metadata
     when:
@@ -483,14 +443,6 @@ spec:
   # CI: Package Application #
   ###########################
   - name: ci-package-application
-    # WARNING: EPIC HACK/WORKAROUND
-    #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
-    #   SEE:
-    #   * https://github.com/tektoncd/pipeline/issues/3126
-    #   * https://github.com/tektoncd/pipeline/issues/2813
-    #   * https://github.com/tektoncd/pipeline/issues/3510
-    retries: 0
-
     runAfter:
     - ci-tag-source-code
     when:
@@ -529,14 +481,6 @@ spec:
   # CI: Push Application to Repository #
   ######################################
   - name: ci-push-application-to-repository
-    # WARNING: EPIC HACK/WORKAROUND
-    #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
-    #   SEE:
-    #   * https://github.com/tektoncd/pipeline/issues/3126
-    #   * https://github.com/tektoncd/pipeline/issues/2813
-    #   * https://github.com/tektoncd/pipeline/issues/3510
-    retries: 0
-
     runAfter:
     - ci-package-application
     when:
@@ -575,14 +519,6 @@ spec:
   # CI: Create Container Image #
   ##############################
   - name: ci-create-container-image
-    # WARNING: EPIC HACK/WORKAROUND
-    #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
-    #   SEE:
-    #   * https://github.com/tektoncd/pipeline/issues/3126
-    #   * https://github.com/tektoncd/pipeline/issues/2813
-    #   * https://github.com/tektoncd/pipeline/issues/3510
-    retries: 0
-
     runAfter:
     - ci-push-application-to-repository
     when:
@@ -621,14 +557,6 @@ spec:
   # CI: Push Container Image to Repository #
   ##########################################
   - name: ci-push-container-image-to-repository
-    # WARNING: EPIC HACK/WORKAROUND
-    #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
-    #   SEE:
-    #   * https://github.com/tektoncd/pipeline/issues/3126
-    #   * https://github.com/tektoncd/pipeline/issues/2813
-    #   * https://github.com/tektoncd/pipeline/issues/3510
-    retries: 0
-
     runAfter:
     - ci-create-container-image
     when:
@@ -684,14 +612,6 @@ spec:
   # DEV: Deploy or Update Environment #
   #####################################
   - name: dev-deploy-or-update-environment
-    # WARNING: EPIC HACK/WORKAROUND
-    #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
-    #   SEE:
-    #   * https://github.com/tektoncd/pipeline/issues/3126
-    #   * https://github.com/tektoncd/pipeline/issues/2813
-    #   * https://github.com/tektoncd/pipeline/issues/3510
-    retries: 0
-
     runAfter:
     - dev-stage-gate
     when:
@@ -732,14 +652,6 @@ spec:
   # TEST #
   ########
   - name: test-stage-gate
-    # WARNING: EPIC HACK/WORKAROUND
-    #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
-    #   SEE:
-    #   * https://github.com/tektoncd/pipeline/issues/3126
-    #   * https://github.com/tektoncd/pipeline/issues/2813
-    #   * https://github.com/tektoncd/pipeline/issues/3510
-    retries: 0
-
     runAfter:
     # NOTE:
     #   We would prefer to say this runs after the DEV stage finishes....
@@ -764,14 +676,6 @@ spec:
   # TEST: Deploy or Update Environment #
   ######################################
   - name: test-deploy-or-update-environment
-    # WARNING: EPIC HACK/WORKAROUND
-    #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
-    #   SEE:
-    #   * https://github.com/tektoncd/pipeline/issues/3126
-    #   * https://github.com/tektoncd/pipeline/issues/2813
-    #   * https://github.com/tektoncd/pipeline/issues/3510
-    retries: 0
-
     runAfter:
     - test-stage-gate
     when:
@@ -812,14 +716,6 @@ spec:
   # PROD #
   ########
   - name: prod-stage-gate
-    # WARNING: EPIC HACK/WORKAROUND
-    #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
-    #   SEE:
-    #   * https://github.com/tektoncd/pipeline/issues/3126
-    #   * https://github.com/tektoncd/pipeline/issues/2813
-    #   * https://github.com/tektoncd/pipeline/issues/3510
-    retries: 0
-
     runAfter:
     - test-deploy-or-update-environment
     taskRef:
@@ -837,14 +733,6 @@ spec:
   # PROD: Deploy or Update Environment #
   ######################################
   - name: prod-deploy-or-update-environment
-    # WARNING: EPIC HACK/WORKAROUND
-    #   Duplicate TaskRuns are being created (sometimes) which then cause issues with PVC permissions
-    #   SEE:
-    #   * https://github.com/tektoncd/pipeline/issues/3126
-    #   * https://github.com/tektoncd/pipeline/issues/2813
-    #   * https://github.com/tektoncd/pipeline/issues/3510
-    retries: 0
-
     runAfter:
     - prod-stage-gate
     when:
