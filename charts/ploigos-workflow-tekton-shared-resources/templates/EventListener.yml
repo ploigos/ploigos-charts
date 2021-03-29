@@ -17,7 +17,7 @@ spec:
             (body.action == 'opened') || (body.action == 'synchronized')
           )
         overlays:
-        - key: extensions.pipelinerun_name
+        - key: pipelinerun_name
           expression: >-
             body.repository.name.replace('_','-') +
             '--' +
@@ -34,10 +34,10 @@ spec:
           (header.match('X-Gitea-Event', 'push')) &&
           (body.ref.startsWith('refs/heads/'))
         overlays:
-        - key: extensions.branch_name
+        - key: branch_name
           expression: >-
             body.ref.replace('refs/heads/', '')
-        - key: extensions.pipelinerun_name
+        - key: pipelinerun_name
           expression: >-
             body.repository.name.replace('_','-') +
             '--' +

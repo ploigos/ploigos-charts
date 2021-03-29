@@ -13,7 +13,7 @@ spec:
   - name: git-repo-event-target-ref
     value: $(body.pull_request.head.ref)
   - name: pipelinerun-name
-    value: $(body.extensions.pipelinerun_name)
+    value: $(extensions.pipelinerun_name)
   - name: pullreq-sha
     value: $(body.pull_request.head.sha)
   - name: pullreq-ref

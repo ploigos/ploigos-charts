@@ -58,6 +58,14 @@ spec:
             resources:
               requests:
                 storage: {{ $.Values.global.workflowWorkerAppDirPVCRequestSize | quote }}
+      {{- if $.Values.separatePlatformConfig }}
+      - name: ploigos-platform-config
+        configMap:
+          name: ploigos-platform-config
+      - name: ploigos-platform-config-secrets
+        secret:
+          secretName: ploigos-platform-config-secrets
+      {{- end }}
       params:
       {{- if ($.Values.global.verbose | quote) }}
       - name: verbose

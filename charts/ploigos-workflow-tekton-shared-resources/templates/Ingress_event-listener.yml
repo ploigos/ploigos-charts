@@ -19,5 +19,5 @@ spec:
           service:
             name: {{ include "ploigos-workflow-tekton.eventListenerServiceName" .}}
             port:
-              name: http-listener
+              name: listener
 {{- end }}

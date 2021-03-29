@@ -11,6 +11,6 @@ spec:
   - name: git-repo-ssh-url
     value: $(body.repository.ssh_url)
   - name: git-repo-event-target-ref
-    value: $(body.extensions.branch_name)
+    value: $(extensions.branch_name)
   - name: pipelinerun-name
-    value: $(body.extensions.pipelinerun_name)
+    value: $(extensions.pipelinerun_name)

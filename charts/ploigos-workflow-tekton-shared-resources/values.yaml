@@ -310,3 +310,14 @@ global:
   # ---
   # https://github.com/tektoncd/pipeline/blob/master/docs/auth.md#configuring-ssh-auth-authentication-for-git
   tektonGitSSHKeys: {}
+
+  # Flag indicating that platform-level configuration is separate from
+  # app-level configuration, and that the ploigos-step-runner ClusterTask
+  # should expect to find:
+  # - Platform config mounted in /opt/ploigos-platform-config
+  # - Platform config secrets mounted in /opt/ploigos-platform-config-secrets
+  #
+  # This flag adds two workspaces to the TriggerTemplate's PipelineRun definition:
+  # - ploigos-platform-config: for mounting a ConfigMap
+  # - ploigos-platform-config-secrets: for mounting a Secret
+  separatePlatformConfig: false
