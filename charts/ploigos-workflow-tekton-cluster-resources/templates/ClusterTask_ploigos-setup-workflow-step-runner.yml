@@ -155,16 +155,6 @@ spec:
       if [ "${VERBOSE}" == "true" ]; then set -x; else set +x; fi
       set -eu -o pipefail
 
-      echo "***********************************************************************************************************************************"
-      echo "* EPIC HACK/WORKDAROUND FOR DUPLICATE TaskRun BEING CREATED CAUSING PERMISSIONS ISSUES WITH PVC MOUNTED IN THE DUPLICATE TaskRuns *"
-      echo "***********************************************************************************************************************************"
-      echo "SEE:"
-      echo "* https://github.com/tektoncd/pipeline/issues/3126"
-      echo "* https://github.com/tektoncd/pipeline/issues/2813"
-      echo "* https://github.com/tektoncd/pipeline/issues/3510"
-      echo "Check if can 'ls -al $HOME', if not then will throw error and retry this task"
-      ls -al $HOME
-
       echo "**********************"
       echo "* Create Python venv *"
       echo "**********************"
@@ -204,16 +194,6 @@ spec:
       #!/bin/sh
       if [ "${VERBOSE}" == "true" ]; then set -x; else set +x; fi
       set -eu -o pipefail
-
-      echo "***********************************************************************************************************************************"
-      echo "* EPIC HACK/WORKDAROUND FOR DUPLICATE TaskRun BEING CREATED CAUSING PERMISSIONS ISSUES WITH PVC MOUNTED IN THE DUPLICATE TaskRuns *"
-      echo "***********************************************************************************************************************************"
-      echo "SEE:"
-      echo "* https://github.com/tektoncd/pipeline/issues/3126"
-      echo "* https://github.com/tektoncd/pipeline/issues/2813"
-      echo "* https://github.com/tektoncd/pipeline/issues/3510"
-      echo "Check if can 'ls -al $HOME', if not then will throw error and retry this task"
-      ls -al $HOME
 
       if [[ ${UPDATE_STEP_RUNNER_LIBRARY} =~ true|True ]]; then
         echo "*********************"
