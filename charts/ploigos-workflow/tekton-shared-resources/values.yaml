@@ -130,7 +130,7 @@ global:
   # NOTE
   # ----
   # PIP is indeterminate whether it will pull packages from '--index-url' or
-  # '--extra-index-url', therefor be sure to specify 'stepRunnerLibVersion'
+  # '--extra-index-url', therefore be sure to specify 'stepRunnerLibVersion'
   # if trying to pull a specific version from a specific index.
   #
   # SEE
@@ -147,7 +147,7 @@ global:
   # NOTE
   # ----
   # PIP is indeterminate whether it will pull packages from '--index-url' or
-  # '--extra-index-url', therefor be sure to specify 'stepRunnerLibVersion'
+  # '--extra-index-url', therefore be sure to specify 'stepRunnerLibVersion'
   # if trying to pull a specific version from a specific index.
   #
   # SEE
@@ -183,16 +183,16 @@ global:
   envNameProd: PROD
 
   # ciOnlyGitRefPatterns is the regex pattern for git references that should only go through the
-  # Continues Integration (CI) workflow.
+  # Continuous Integration (CI) workflow.
   # Required.
   ciOnlyGitRefPatterns: "^$"
   # devGitRefPatterns is the Regex pattern for git references that should go through the
-  # Continues Integration (CI) workflow and then the deployment to
+  # Continuous Integration (CI) workflow and then the deployment to
   # "Development" environment(s) (IE: "DEV" environment) workflow.
   # Required.
   devGitRefPatterns: "^feature/.+$|^PR-.+$"
   # releaseGitRefPatterns is the Regex pattern for git references that should go through the
-  # Continues Integration (CI) workflow and then the deployment to
+  # Continuous Integration (CI) workflow and then the deployment to
   # "Release" environment(s) (IE: "TEST" and then "PROD" environments) workflow.
   # Required.
   releaseGitRefPatterns: "^main$"
@@ -283,10 +283,10 @@ global:
   # workflowWorkerImageDeploy is the container image to use when creating a workflow worker
   # to run pipeline steps when performing deploy step(s).
   workflowWorkerImageDeploy: ploigos/ploigos-tool-argocd:latest
-  # workflowWorkerImageValidateEnvironmentConfiguraiton is the
+  # workflowWorkerImageValidateEnvironmentConfiguration is the
   # container image to use when creating a workflow worker
   # to run pipeline steps when performing validate environment configuration step(s).
-  workflowWorkerImageValidateEnvironmentConfiguraiton: ploigos/ploigos-tool-config-lint:latest
+  workflowWorkerImageValidateEnvironmentConfiguration: ploigos/ploigos-tool-config-lint:latest
   # workflowWorkerImageUAT is the container image to use when creating a workflow worker
   # to run pipeline steps when performing user acceptance tests (UAT) step(s).
   workflowWorkerImageUAT:

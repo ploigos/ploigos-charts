@@ -64,7 +64,7 @@ spec:
       NOTE
       ----
       PIP is indeterminate whether it will pull packages from '--index-url' or
-      '--extra-index-url', therefor be sure to specify 'stepRunnerLibVersion'
+      '--extra-index-url', therefore be sure to specify 'stepRunnerLibVersion'
       if trying to pull a specific version from a specific index.
 
       SEE
@@ -81,7 +81,7 @@ spec:
       NOTE
       ----
       PIP is indeterminate whether it will pull packages from '--index-url' or
-      '--extra-index-url', therefor be sure to specify 'stepRunnerLibVersion'
+      '--extra-index-url', therefore be sure to specify 'stepRunnerLibVersion'
       if trying to pull a specific version from a specific index.
 
       SEE

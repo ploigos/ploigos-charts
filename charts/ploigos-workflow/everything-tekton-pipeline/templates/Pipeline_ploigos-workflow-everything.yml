@@ -18,14 +18,14 @@ spec:
   {{- if $.Values.global.separatePlatformConfig }}
   - name: ploigos-platform-config
     description: |
-      Workspace containing platform-level config
+      Workspace containing platform-level config.
   - name: ploigos-platform-config-secrets
     description: |
-      Workspace containing platform-level secrets
+      Workspace containing platform-level secrets.
   {{- end }}
   params:
     - name: verbose
-      description: log any *sh commands used during execution
+      description: Log any *sh commands used during execution.
       type: string
       default: "false"
     - name: appRepoUrl
@@ -39,7 +39,7 @@ spec:
     - name: appCloneSSLVerify
       description: |
         Passed to git-clone ClusterTask.
-        Defines if http.sslVerify should be set to true or false in the global git config
+        Defines if http.sslVerify should be set to true or false in the global git config.
       type: string
       default: "true"
     - name: stepRunnerConfigDir
@@ -78,20 +78,20 @@ spec:
       type: string
       description: |
         Regex pattern for git references that should only go through the
-        Continues Integration (CI) workflow.
+        Continuous Integration (CI) workflow.
       default: "^$"
     - name: devGitRefPatterns
       type: string
       description: |
         Regex pattern for git references that should go through the
-        Continues Integration (CI) workflow and then the deployment to
+        Continuous Integration (CI) workflow and then the deployment to
         "Development" environment(s) (IE: "DEV" environment) workflow.
       default: "^feature/.+$|^PR-.+$"
     - name: releaseGitRefPatterns
       type: string
       description: |
         Regex pattern for git references that should go through the
-        Continues Integration (CI) workflow and then the deployment to
+        Continuous Integration (CI) workflow and then the deployment to
         "Release" environment(s) (IE: "TEST" and then "PROD" environments) workflow.
       default: "^main$"
     - name: stepRunnerPackageName
@@ -122,7 +122,7 @@ spec:
         NOTE
         ----
         PIP is indeterminate whether it will pull packages from '--index-url' or
-        '--extra-index-url', therefor be sure to specify 'stepRunnerLibVersion'
+        '--extra-index-url', therefore be sure to specify 'stepRunnerLibVersion'
         if trying to pull a specific version from a specific index.
 
         SEE
@@ -139,7 +139,7 @@ spec:
         NOTE
         ----
         PIP is indeterminate whether it will pull packages from '--index-url' or
-        '--extra-index-url', therefor be sure to specify 'stepRunnerLibVersion'
+        '--extra-index-url', therefore be sure to specify 'stepRunnerLibVersion'
         if trying to pull a specific version from a specific index.
 
         SEE
@@ -161,7 +161,7 @@ spec:
       type: string
       description: |
         If none empty value given and 'stepRunnerUpdateLibrary' is true this will be used as the source
-        location to install the Workflow Step Runner library from rather then from a PEP 503 compliant
+        location to install the Workflow Step Runner library from rather than from a PEP 503 compliant
         repository.
 
         If given then the following parameters are ignored:
@@ -241,7 +241,7 @@ spec:
         Container image to use when creating a workflow worker
         to run pipeline steps when performing deploy step(s).
       default: ploigos/ploigos-tool-argocd:latest
-    - name: workflowWorkerImageValidateEnvironmentConfiguraiton
+    - name: workflowWorkerImageValidateEnvironmentConfiguration
       type: string
       description: |
         Container image to use when creating a workflow worker
@@ -311,9 +311,9 @@ spec:
     runAfter:
     - setup-stage-gate
     # NOTE:
-    #   this dependency is only here because of read/write once constraints of most PV/PVCs
-    #   if happening to be using storage that supports ReadWriteMany then the following steps
-    #   can run in parallel
+    #   This dependency is only here because of read/write once constraints of most PV/PVCs.
+    #   If happening to be using storage that supports ReadWriteMany then the following steps
+    #   can run in parallel.
     #   * setup-app-clone
     #   * setup-workflow-step-runner
     #   * setup-pgp-keys
@@ -355,9 +355,9 @@ spec:
     runAfter:
     - setup-stage-gate
     # NOTE:
-    #   this dependency is only here because of read/write once constraints of most PV/PVCs
-    #   if happening to be using storage that supports ReadWriteMany then the following steps
-    #   can run in parallel
+    #   This dependency is only here because of read/write once constraints of most PV/PVCs.
+    #   If happening to be using storage that supports ReadWriteMany then the following steps
+    #   can run in parallel.
     #   * setup-app-clone
     #   * setup-workflow-step-runner
     #   * setup-pgp-keys
@@ -382,9 +382,9 @@ spec:
     - name: pgpKeysSecretName
       value: $(params.pgpKeysSecretName)
 
-  #########################
-  # Continues Integration #
-  #########################
+  ##########################
+  # Continuous Integration #
+  ##########################
   - name: ci-stage-gate
     runAfter:
     - setup-app-clone
@@ -728,7 +728,7 @@ spec:
     runAfter:
     - ci-create-container-image
     # NOTE:
-    #   since we need to share the $HOME dir between tasks and Kube and Tekton don't like
+    #   Since we need to share the $HOME dir between tasks, and Kube and Tekton don't like
     #   two pods mounting the same PV as ready write, we can't run the vulnerability and compliance
     #   tasks in parallel.
     #
@@ -973,7 +973,7 @@ spec:
     - name: verbose
       value: $(params.verbose)
     - name: image
-      value: $(params.workflowWorkerImageValidateEnvironmentConfiguraiton)
+      value: $(params.workflowWorkerImageValidateEnvironmentConfiguration)
     - name: imagePullPolicy
       value: $(params.workflowWorkersImagePullPolicy)
     - name: stepRunnerPackageName
@@ -1078,7 +1078,7 @@ spec:
     runAfter:
     # NOTE:
     #   We would prefer to say this runs after the DEV stage finishes....
-    #   but....https://github.com/tektoncd/pipeline/issues/2127. Which means
+    #   but....https://github.com/tektoncd/pipeline/issues/2127. Which means:
     #   If the DEV stage is skipped then this stage will be skipped too because the
     #   dev-generate-evidence task was skipped so the runAfter makes it so this step
     #   would never run.
@@ -1165,7 +1165,7 @@ spec:
     - name: verbose
       value: $(params.verbose)
     - name: image
-      value: $(params.workflowWorkerImageValidateEnvironmentConfiguraiton)
+      value: $(params.workflowWorkerImageValidateEnvironmentConfiguration)
     - name: imagePullPolicy
       value: $(params.workflowWorkersImagePullPolicy)
     - name: stepRunnerPackageName
@@ -1350,7 +1350,7 @@ spec:
     - name: verbose
       value: $(params.verbose)
     - name: image
-      value: $(params.workflowWorkerImageValidateEnvironmentConfiguraiton)
+      value: $(params.workflowWorkerImageValidateEnvironmentConfiguration)
     - name: imagePullPolicy
       value: $(params.workflowWorkersImagePullPolicy)
     - name: stepRunnerPackageName
