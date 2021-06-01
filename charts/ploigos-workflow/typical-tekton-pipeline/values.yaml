@@ -283,10 +283,10 @@ global:
   # workflowWorkerImageDeploy is the container image to use when creating a workflow worker
   # to run pipeline steps when performing deploy step(s).
   workflowWorkerImageDeploy: ploigos/ploigos-tool-argocd:latest
-  # workflowWorkerImageValidateEnvironmentConfiguraiton is the
+  # workflowWorkerImageValidateEnvironmentConfiguration is the
   # container image to use when creating a workflow worker
   # to run pipeline steps when performing validate environment configuration step(s).
-  workflowWorkerImageValidateEnvironmentConfiguraiton: ploigos/ploigos-tool-config-lint:latest
+  workflowWorkerImageValidateEnvironmentConfiguration: ploigos/ploigos-tool-config-lint:latest
   # workflowWorkerImageUAT is the container image to use when creating a workflow worker
   # to run pipeline steps when performing user acceptance tests (UAT) step(s).
   workflowWorkerImageUAT:

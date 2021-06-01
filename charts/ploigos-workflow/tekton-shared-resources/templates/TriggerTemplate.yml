@@ -145,9 +145,9 @@ spec:
       {{- end }}
       - name: workflowWorkerImageDeploy
         value: {{ (required "Global Value is required: workflowWorkerImageDeploy" $.Values.global.workflowWorkerImageDeploy) | quote }}
-      {{- if $.Values.global.workflowWorkerImageValidateEnvironmentConfiguraiton }}
-      - name: workflowWorkerImageValidateEnvironmentConfiguraiton
-        value: {{ $.Values.global.workflowWorkerImageValidateEnvironmentConfiguraiton | quote }}
+      {{- if $.Values.global.workflowWorkerImageValidateEnvironmentConfiguration }}
+      - name: workflowWorkerImageValidateEnvironmentConfiguration
+        value: {{ $.Values.global.workflowWorkerImageValidateEnvironmentConfiguration | quote }}
       {{- end }}
       {{- if $.Values.global.workflowWorkerImageUAT }}
       - name: workflowWorkerImageUAT

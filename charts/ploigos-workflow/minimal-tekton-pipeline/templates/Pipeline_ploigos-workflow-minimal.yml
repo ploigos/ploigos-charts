@@ -25,7 +25,7 @@ spec:
   {{- end }}
   params:
     - name: verbose
-      description: log any *sh commands used during execution
+      description: Log any *sh commands used during execution.
       type: string
       default: "false"
     - name: appRepoUrl
@@ -39,7 +39,7 @@ spec:
     - name: appCloneSSLVerify
       description: |
         Passed to git-clone ClusterTask.
-        Defines if http.sslVerify should be set to true or false in the global git config
+        Defines if http.sslVerify should be set to true or false in the global git config.
       type: string
       default: "true"
     - name: stepRunnerConfigDir
@@ -74,25 +74,24 @@ spec:
         files and to pass to the Workflow Step Runner when running a step targeted to
         the "Production" environment.
       default: PROD
-
     - name: ciOnlyGitRefPatterns
       type: string
       description: |
         Regex pattern for git references that should only go through the
-        Continues Integration (CI) workflow.
+        Continuous Integration (CI) workflow.
       default: "^$"
     - name: devGitRefPatterns
       type: string
       description: |
         Regex pattern for git references that should go through the
-        Continues Integration (CI) workflow and then the deployment to
+        Continuous Integration (CI) workflow and then the deployment to
         "Development" environment(s) (IE: "DEV" environment) workflow.
       default: "^feature/.+$|^PR-.+$"
     - name: releaseGitRefPatterns
       type: string
       description: |
         Regex pattern for git references that should go through the
-        Continues Integration (CI) workflow and then the deployment to
+        Continuous Integration (CI) workflow and then the deployment to
         "Release" environment(s) (IE: "TEST" and then "PROD" environments) workflow.
       default: "^main$"
     - name: stepRunnerPackageName
@@ -123,7 +122,7 @@ spec:
         NOTE
         ----
         PIP is indeterminate whether it will pull packages from '--index-url' or
-        '--extra-index-url', therefor be sure to specify 'stepRunnerLibVersion'
+        '--extra-index-url', therefore be sure to specify 'stepRunnerLibVersion'
         if trying to pull a specific version from a specific index.
 
         SEE
@@ -140,7 +139,7 @@ spec:
         NOTE
         ----
         PIP is indeterminate whether it will pull packages from '--index-url' or
-        '--extra-index-url', therefor be sure to specify 'stepRunnerLibVersion'
+        '--extra-index-url', therefore be sure to specify 'stepRunnerLibVersion'
         if trying to pull a specific version from a specific index.
 
         SEE
@@ -278,9 +277,9 @@ spec:
     runAfter:
     - setup-stage-gate
     # NOTE:
-    #   this dependency is only here because of read/write once constraints of most PV/PVCs
-    #   if happening to be using storage that supports ReadWriteMany then the following steps
-    #   can run in parallel
+    #   This dependency is only here because of read/write once constraints of most PV/PVCs.
+    #   If happening to be using storage that supports ReadWriteMany then the following steps
+    #   can run in parallel.
     #   * setup-app-clone
     #   * setup-workflow-step-runner
     #   * setup-pgp-keys
@@ -322,9 +321,9 @@ spec:
     runAfter:
     - setup-stage-gate
     # NOTE:
-    #   this dependency is only here because of read/write once constraints of most PV/PVCs
-    #   if happening to be using storage that supports ReadWriteMany then the following steps
-    #   can run in parallel
+    #   This dependency is only here because of read/write once constraints of most PV/PVCs.
+    #   If happening to be using storage that supports ReadWriteMany then the following steps
+    #   can run in parallel.
     #   * setup-app-clone
     #   * setup-workflow-step-runner
     #   * setup-pgp-keys
@@ -349,9 +348,9 @@ spec:
     - name: pgpKeysSecretName
       value: $(params.pgpKeysSecretName)
 
-  #########################
-  # Continues Integration #
-  #########################
+  ##########################
+  # Continuous Integration #
+  ##########################
   - name: ci-stage-gate
     runAfter:
     - setup-app-clone
@@ -595,7 +594,7 @@ spec:
     # NOTE:
     #   We would prefer to say this runs after the DEV stage finishes....
     #   but....https://github.com/tektoncd/pipeline/issues/2127. Which means
-    #   If the DEV stage is skipped then this stage will be skipped too because the
+    #   if the DEV stage is skipped then this stage will be skipped too because the
     #   dev-deploy-or-update-environment task was skipped so the runAfter makes it so this step
     #   would never run.
     - ci-push-container-image-to-repository
