@@ -1,0 +1,30 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: ClusterTriggerBinding
+metadata:
+  name: gitea-pullreq
+  labels:
+    {{- include "ploigos-workflow-tekton-cluster-resources.labels" . | nindent 4 }}
+spec:
+  params:
+  - name: git-repo-url
+    value: $(body.repository.html_url)
+  - name: git-repo-ssh-url
+    value: $(body.repository.ssh_url)
+  - name: git-repo-event-target-ref
+    value: $(body.pull_request.head.ref)
+  - name: pipelinerun-name
+    value: $(extensions.pipelinerun_name)
+  - name: pullreq-sha
+    value: $(body.pull_request.head.sha)
+  - name: pullreq-ref
+    value: $(body.pull_request.head.ref)
+  - name: pullreq-action
+    value: $(body.action)
+  - name: pullreq-number
+    value: $(body.number)
+  - name: pullreq-repo-full_name
+    value: $(body.repository.full_name)
+  - name: pullreq-html-url
+    value: $(body.pull_request.html_url)
+  - name: pullreq-title
+    value: $(body.pull_request.title)

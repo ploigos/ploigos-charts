@@ -1,0 +1,8 @@
+*********************************************
+* ploigos-workflow-standard-tekton-pipeline *
+*********************************************
+
+Installed Ploigos Workflow (Standard)
+* Tekton Pipeline: {{ include "ploigos-workflow-tekton.pipelineName" . }}
+* Application: {{ $.Values.global.applicationName }}
+* Service: {{ $.Values.global.serviceName }}

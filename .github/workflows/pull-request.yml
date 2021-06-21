@@ -9,6 +9,9 @@ on:
     - .github/**
     - charts/**
 
+env:
+  CHARTS_DIR: 'charts/ploigos-workflow'
+
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -23,7 +26,7 @@ jobs:
     - name: Setup Helm 🧰
       uses: azure/setup-helm@v1
       with:
-        version: v3.4.1
+        version: v3.6.1
 
     - name: Setup Python 🧰🐍
       uses: actions/setup-python@v2
@@ -31,16 +34,10 @@ jobs:
         python-version: 3.7
 
     - name: Setup chart-testing 🧰
-      uses: helm/chart-testing-action@v2.0.1
+      uses: helm/chart-testing-action@v2.1.0
 
-    # NOTE:
-    #   --validate-chart-schema=false due to https://github.com/helm/chart-testing/pull/300
     - name: Lint with chart-testing 🧪🖋
-      run: |
-        ct lint \
-          --all \
-          --validate-maintainers=false \
-          --validate-chart-schema=false
+      run: ${GITHUB_WORKSPACE}/.github/scripts/lint.sh
 
   install-test:
     runs-on: ubuntu-latest
@@ -53,7 +50,7 @@ jobs:
     - name: Setup Helm 🧰
       uses: azure/setup-helm@v1
       with:
-        version: v3.4.1
+        version: v3.6.1
 
     - name: Setup Python 🐍
       uses: actions/setup-python@v2
@@ -61,24 +58,15 @@ jobs:
         python-version: 3.7
 
     - name: Setup chart-testing 🧰
-      uses: helm/chart-testing-action@v2.0.1
+      uses: helm/chart-testing-action@v2.1.0
 
     - name: Setup kind cluster 🧰
       uses: helm/kind-action@v1.1.0
+      with:
+        version: v0.11.1
 
     - name: Configure Kubernetes 🧰
-      run: |
-        echo "Install ingress controller"
-        helm repo add haproxy-ingress https://haproxy-ingress.github.io/charts
-        helm install haproxy-ingress haproxy-ingress/haproxy-ingress \
-          --create-namespace --namespace=ingress-controller \
-          --set controller.hostNetwork=true
-
-        echo "Install tekton"
-        kubectl apply --filename https://storage.googleapis.com/tekton-releases/pipeline/previous/v0.16.3/release.yaml
-        kubectl apply --filename https://storage.googleapis.com/tekton-releases/triggers/previous/v0.8.1/release.yaml
+      run: ${GITHUB_WORKSPACE}/.github/scripts/configure-kube.sh
 
     - name: Test install with chart-testing 🧪
-      run: |
-        ct install \
-          --all
+      run: ${GITHUB_WORKSPACE}/.github/scripts/test.sh

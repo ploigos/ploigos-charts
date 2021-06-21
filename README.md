@@ -45,18 +45,28 @@ If you want to use a local [Kind](https://kind.sigs.k8s.io/) cluster to do your 
 how you can set it up.
 
 ```bash
-kind create cluster ploigos-test
+kind create cluster --name ploigos-test
 kubectl config use-context kind-ploigos-test
 
 echo "Install ingress controller"
 helm repo add haproxy-ingress https://haproxy-ingress.github.io/charts
-helm install haproxy-ingress haproxy-ingress/haproxy-ingress \
+helm upgrade --install haproxy-ingress haproxy-ingress/haproxy-ingress \
     --create-namespace --namespace=ingress-controller \
     --set controller.hostNetwork=true
+kubectl apply -f - <<EOF
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  name: haproxy
+  annotations:
+    ingressclass.kubernetes.io/is-default-class: 'true'
+spec:
+  controller: haproxy-ingress.github.io/controller
+EOF
 
 echo "Install tekton"
-kubectl apply --filename https://storage.googleapis.com/tekton-releases/pipeline/previous/v0.16.3/release.yaml
-kubectl apply --filename https://storage.googleapis.com/tekton-releases/triggers/previous/v0.8.1/release.yaml
+kubectl apply --filename https://storage.googleapis.com/tekton-releases/pipeline/previous/v0.22.0/release.yaml
+kubectl apply --filename https://storage.googleapis.com/tekton-releases/triggers/previous/v0.12.0/release.yaml
 ```
 
 ### Run linter
@@ -74,7 +84,7 @@ ct lint \
 so be aware of what that means.
 
 ```bash
-kubectl config use-context ???
+kubectl config use-context kind-ploigos-test
 
 ct install \
     --all

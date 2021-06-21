@@ -1,0 +1,49 @@
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: {{ include "ploigos-workflow-tekton.eventListenerName" . }}
+  labels:
+    {{- include "ploigos-workflow.labels" . | nindent 4 }}
+spec:
+  serviceAccountName: {{ include "ploigos-workflow-tekton.eventListenerServiceAccountName" . }}
+  triggers:
+  - name: gitea-pull-request
+    interceptors:
+    - cel:
+        filter: >-
+          (header.match('X-Gitea-Event', 'pull_request')) &&
+          (
+            (body.action == 'opened') || (body.action == 'synchronized')
+          )
+        overlays:
+        - key: pipelinerun_name
+          expression: >-
+            body.repository.name.replace('_','-') +
+            '--' +
+            body.pull_request.head.ref.replace('/','-').replace('_','-')
+    bindings:
+    - kind: ClusterTriggerBinding
+      ref: gitea-pullreq
+    template:
+      ref: {{ include "ploigos-workflow-tekton.triggerTemplateName" . }}
+  - name: gitea-push
+    interceptors:
+    - cel:
+        filter: >-
+          (header.match('X-Gitea-Event', 'push')) &&
+          (body.ref.startsWith('refs/heads/'))
+        overlays:
+        - key: branch_name
+          expression: >-
+            body.ref.replace('refs/heads/', '')
+        - key: pipelinerun_name
+          expression: >-
+            body.repository.name.replace('_','-') +
+            '--' +
+            body.ref.replace('refs/heads/', '').replace('/','-').replace('_','-')
+    bindings:
+    - kind: ClusterTriggerBinding
+      ref: gitea-push
+    template:
+      ref: {{ include "ploigos-workflow-tekton.triggerTemplateName" . }}

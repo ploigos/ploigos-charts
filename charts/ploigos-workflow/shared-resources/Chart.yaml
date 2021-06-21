@@ -1,0 +1,14 @@
+apiVersion: v2
+name: ploigos-workflow-shared-resources
+description: |
+  A Helm chart for Kubernetes to install the shared resources for a Ploigos Workflow run
+  by any workflow executor service (ex: Tekton, DronCI, Jenkins, etc).
+
+  This is meant to be a child chart of other charts for specific tools to implement specific
+  Workflows for specific workflow executor services.
+type: application
+maintainers:
+  - name: Red Hat, Inc.
+    email: ploigos@redhat.com
+# MANAGED BY: GitHub workflow
+version: 0.16.3-edge.2
