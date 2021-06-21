@@ -6,6 +6,9 @@ on:
     types:
     - published
 
+env:
+  CHARTS_DIR: 'charts/ploigos-workflow'
+
 jobs:
   # NOTE:
   #   * currently no way to filter on release actions
@@ -42,9 +45,10 @@ jobs:
 
       - name: Determine Helm Charts to release ⚙️
         id: helm-charts
-        run: |
-          HELM_CHARTS=$(python -c 'import os, json; print json.dumps(os.listdir("charts/"))')
-          echo "::set-output name=helm-charts::${HELM_CHARTS}"
+        run: ${GITHUB_WORKSPACE}/.github/scripts/determine-helm-charts-to-release.py
+
+      - name: Helm Charts to Release 📌
+        run: echo ${{ steps.helm-charts.outputs.helm-charts }}
 
       - name: Determine Helm Chart Version ⚙️
         id: helm-chart-semver
@@ -68,7 +72,7 @@ jobs:
     - name: Setup Helm 🧰
       uses: azure/setup-helm@v1
       with:
-        version: v3.4.1
+        version: v3.6.1
 
     - name: Setup Python 🧰🐍
       uses: actions/setup-python@v2
@@ -76,16 +80,10 @@ jobs:
         python-version: 3.7
 
     - name: Setup chart-testing 🧰
-      uses: helm/chart-testing-action@v2.0.1
+      uses: helm/chart-testing-action@v2.1.0
 
-    # NOTE:
-    #   --validate-chart-schema=false due to https://github.com/helm/chart-testing/pull/300
     - name: Lint with chart-testing 🧪🖋
-      run: |
-        ct lint \
-          --all \
-          --validate-maintainers=false \
-          --validate-chart-schema=false
+      run: ${GITHUB_WORKSPACE}/.github/scripts/lint.sh
 
   install-test:
     runs-on: ubuntu-latest
@@ -100,7 +98,7 @@ jobs:
     - name: Setup Helm 🧰
       uses: azure/setup-helm@v1
       with:
-        version: v3.4.1
+        version: v3.6.1
 
     - name: Setup Python 🐍
       uses: actions/setup-python@v2
@@ -108,27 +106,16 @@ jobs:
         python-version: 3.7
 
     - name: Setup chart-testing 🧰
-      uses: helm/chart-testing-action@v2.0.1
+      uses: helm/chart-testing-action@v2.1.0
 
     - name: Setup kind cluster 🧰
       uses: helm/kind-action@v1.1.0
 
     - name: Configure Kubernetes 🧰
-      run: |
-        echo "Install ingress controller"
-        helm repo add haproxy-ingress https://haproxy-ingress.github.io/charts
-        helm install haproxy-ingress haproxy-ingress/haproxy-ingress \
-          --create-namespace --namespace=ingress-controller \
-          --set controller.hostNetwork=true
-
-        echo "Install tekton"
-        kubectl apply --filename https://storage.googleapis.com/tekton-releases/pipeline/previous/v0.16.3/release.yaml
-        kubectl apply --filename https://storage.googleapis.com/tekton-releases/triggers/previous/v0.8.1/release.yaml
+      run: ${GITHUB_WORKSPACE}/.github/scripts/configure-kube.sh
 
     - name: Test install with chart-testing 🧪
-      run: |
-        ct install \
-          --all
+      run: ${GITHUB_WORKSPACE}/.github/scripts/test.sh
 
   prepare-for-release:
     runs-on: ubuntu-latest
@@ -152,12 +139,12 @@ jobs:
       uses: docker://mikefarah/yq:3
       with:
         args:
-          yq write --inplace charts/${{ matrix.helm-chart }}/Chart.yaml version ${{ needs.setup.outputs.helm-charts-new-semver }}
+          yq write --inplace ${{ env.CHARTS_DIR }}/${{ matrix.helm-chart }}/Chart.yaml version ${{ needs.setup.outputs.helm-charts-new-semver }}
 
     # NOTE: workaround for https://github.com/helm/chart-releaser/issues/95
     - name: Create Chart.lock ⚙️
       run: |
-        helm dependency update charts/${{ matrix.helm-chart }}
+        helm dependency update ${{ env.CHARTS_DIR }}/${{ matrix.helm-chart }}
 
     # NOTE:
     #  Chart.lock uploaded as workaround for https://github.com/helm/chart-releaser/issues/95
@@ -166,8 +153,8 @@ jobs:
       with:
         name: ${{ matrix.helm-chart }}
         path: |
-          charts/${{ matrix.helm-chart }}/Chart.yaml
-          charts/${{ matrix.helm-chart }}/Chart.lock
+          ${{ env.CHARTS_DIR }}/${{ matrix.helm-chart }}/Chart.yaml
+          ${{ env.CHARTS_DIR }}/${{ matrix.helm-chart }}/Chart.lock
 
   release:
     runs-on: ubuntu-latest
@@ -189,7 +176,7 @@ jobs:
       id: download-helm-charts
       uses: actions/download-artifact@v2
       with:
-        path: charts
+        path: ${{ env.CHARTS_DIR }}
 
     - name: Push Updated Helm Chart Verions 💾
       uses: github-actions-x/commit@v2.7
@@ -201,10 +188,12 @@ jobs:
     - name: Setup Helm 🧰
       uses: azure/setup-helm@v1
       with:
-        version: v3.4.1
+        version: v3.6.1
 
     - name: Run chart-releaser 🚀
-      uses: helm/chart-releaser-action@v1.1.0
+      uses: helm/chart-releaser-action@v1.2.1
+      with:
+        charts_dir: "${{ env.CHARTS_DIR }}"
       env:
         CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 

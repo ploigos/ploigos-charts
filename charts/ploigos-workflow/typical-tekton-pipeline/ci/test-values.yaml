@@ -1,0 +1,22 @@
+---
+global:
+  applicationName: test-app
+  serviceName: test-srv
+
+  stepRunnerConfigDir: cicd/step-runner-config
+
+  workflowWorkerImageDefault: quay.io/ploigos/ploigos-base:latest
+  workflowWorkerImageUnitTest: quay.io/ploigos/ploigos-tool-maven:latest
+  workflowWorkerImagePackage: quay.io/ploigos/ploigos-tool-maven:latest
+  workflowWorkerImageStaticCodeAnalysis: quay.io/ploigos/ploigos-tool-sonar:latest
+  workflowWorkerImagePushArtifacts: quay.io/ploigos/ploigos-tool-maven:latest
+  workflowWorkerImageUAT: quay.io/ploigos/ploigos-tool-maven:latest
+
+  # NOTE:
+  #   have to test with ingress since GitHub action tests on 'kind' server where routes don't
+  #   exist. Would much rather not have this hard coded in here and pass in at run time but....
+  #   https://github.com/helm/chart-testing/issues/301
+  eventListenerCreateRoute: false
+  eventListenerCreateIngress: true
+  eventListenerRouteHostOverride: el-test.ploigos.xyz
+  eventListenerIngressHost: el-test.ploigos.xyz
