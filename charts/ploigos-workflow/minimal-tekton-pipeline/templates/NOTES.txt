@@ -1,5 +1,5 @@
 *********************************************
-* ploigos-workflow-standard-tekton-pipeline *
+* ploigos-workflow-minimal-tekton-pipeline *
 *********************************************
 
 Installed Ploigos Workflow (Minimal)
