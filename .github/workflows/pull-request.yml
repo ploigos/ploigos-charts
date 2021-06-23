@@ -13,7 +13,17 @@ env:
   CHARTS_DIR: 'charts/ploigos-workflow'
 
 jobs:
+  cancel-previous:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.5.0
+        with:
+          access_token: ${{ github.token }}
+
   lint:
+    needs:
+    - cancel-previous
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -40,6 +50,8 @@ jobs:
       run: ${GITHUB_WORKSPACE}/.github/scripts/lint.sh
 
   install-test:
+    needs:
+    - cancel-previous
     runs-on: ubuntu-latest
     steps:
     - name: Checkout 🛎️
