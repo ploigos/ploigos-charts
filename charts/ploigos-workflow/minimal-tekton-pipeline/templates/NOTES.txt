@@ -1,6 +1,6 @@
-*********************************************
+********************************************
 * ploigos-workflow-minimal-tekton-pipeline *
-*********************************************
+********************************************
 
 Installed Ploigos Workflow (Minimal)
 * Tekton Pipeline: {{ include "ploigos-workflow-tekton.pipelineName" . }}

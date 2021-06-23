@@ -1,6 +1,6 @@
-*********************************************
+********************************************
 * ploigos-workflow-typical-tekton-pipeline *
-*********************************************
+********************************************
 
 Installed Ploigos Workflow (Typical)
 * Tekton Pipeline: {{ include "ploigos-workflow-tekton.pipelineName" . }}

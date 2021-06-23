@@ -1,6 +1,6 @@
-*********************************************
+***********************************************
 * ploigos-workflow-everything-tekton-pipeline *
-*********************************************
+***********************************************
 
 Installed Ploigos Workflow (Everything)
 * Tekton Pipeline: {{ include "ploigos-workflow-tekton.pipelineName" . }}
