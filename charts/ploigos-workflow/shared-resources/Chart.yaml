@@ -11,4 +11,4 @@ maintainers:
   - name: Red Hat, Inc.
     email: ploigos@redhat.com
 # MANAGED BY: GitHub workflow
-version: 0.17.0
+version: 0.17.1-edge.0
