@@ -1,14 +1,11 @@
 apiVersion: v2
-name: ploigos-workflow-tekton-cluster-resources
+name: ploigos-workflow-shared-cluster-resources
 description: |
   A Helm chart for Kubernetes to deploy the cluster level resources required to
-  deploy and run Ploigos Workflows using Tekton.
+  deploy and run Ploigos Workflows no matter the workflow runner tool.
 type: application
 maintainers:
   - name: Red Hat, Inc.
     email: ploigos@redhat.com
-dependencies:
-  - name: ploigos-workflow-shared-cluster-resources
-    version: ">= 0.0.0 || >= 0.0.0-0"
 # MANAGED BY: GitHub workflow
-version: 0.17.1-edge.0
+version: 0.17.0

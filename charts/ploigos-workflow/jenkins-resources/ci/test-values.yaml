@@ -1,0 +1,4 @@
+---
+global:
+  applicationName: test-app
+  serviceName: test-srv

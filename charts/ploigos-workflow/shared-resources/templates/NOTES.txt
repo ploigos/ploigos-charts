@@ -2,6 +2,20 @@
 * ploigos-workflow-shared-resources *
 *************************************
 
-Installed Ploigos Workflow Shared resources
-* Workflow Service Account: {{ include "ploigos-workflow.workflowServiceAccountName" . }}
+Dependencies
+------------
+The ServiceAccount installed by this chart also installs a namespaced RoleBinding which
+assumes the existence of a ClusterRole ({{ .Values.global.workflowWorkerRunnerRoleName }})
+which has access to a SecurityContextConstraint (or similar) to be able to run containers
+with the SETUID and SETGID container capabilities.
+
+Having a cluster administrator install the ploigos-workflow-shared-cluster-resources chart
+will satisfy these dependencies.
+
+Installed
+---------
+* Workflow ServiceAccount: {{ include "ploigos-workflow.workflowServiceAccountName" . }}
+* Workflow ServiceAccount RoleBinding:
+  - name: {{ include "ploigos-workflow.workflowServiceAccountName" . }}
+  - Target ClusterRole: {{ .Values.global.workflowWorkerRunnerRoleName }}
 * PGP Keys Secret: {{ include "ploigos-workflow.pgpKeysSecretName" . }}

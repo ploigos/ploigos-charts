@@ -43,10 +43,6 @@ spec:
   - name: import-pgp-key
     image: $(params.image)
     imagePullPolicy: $(params.imagePullPolicy)
-    {{- if $.Values.workflowWorkerRunAsUser }}
-    securityContext:
-      runAsUser: {{ $.Values.workflowWorkerRunAsUser | int }}
-    {{- end }}
     env:
     - name: HOME
       value: $(workspaces.home.path)
@@ -60,6 +56,7 @@ spec:
       if [ "${VERBOSE}" == "true" ]; then set -x; else set +x; fi
       set -eu -o pipefail
 
+      echo
       echo "*******************"
       echo "* Import PGP Keys *"
       echo "*******************"

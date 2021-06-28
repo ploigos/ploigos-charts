@@ -1,0 +1,149 @@
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: {{ include "ploigos-workflow-tekton.triggerTemplateName" . }}
+  labels:
+    {{- include "ploigos-workflow.labels" . | nindent 4 }}
+spec:
+  params:
+  - name: git-repo-url
+  - name: git-repo-ssh-url
+  - name: git-repo-event-target-ref
+  - name: pipelinerun-name
+  - name: pullreq-sha
+  - name: pullreq-ref
+  - name: pullreq-action
+  - name: pullreq-number
+  - name: pullreq-repo-full_name
+  - name: pullreq-html-url
+  - name: pullreq-title
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    metadata:
+      generateName: "$(tt.params.pipelinerun-name)-"
+      labels:
+        {{- include "ploigos-workflow.labels" . | nindent 8 }}
+    spec:
+      pipelineRef:
+        name: {{ include "ploigos-workflow-tekton.pipelineName" . | quote }}
+      serviceAccountName: {{ include "ploigos-workflow.workflowServiceAccountName" . }}
+      taskRunSpecs:
+      - pipelineTaskName: setup-app-clone
+        taskServiceAccountName: {{ include "ploigos-workflow.workflowServiceAccountName" . }}
+        taskPodTemplate: {}
+
+      resources: []
+      workspaces:
+      - name: home
+        volumeClaimTemplate:
+          spec:
+            accessModes:
+            - ReadWriteOnce
+            resources:
+              requests:
+                storage: {{ $.Values.global.workflowWorkerHomeDirPVCRequestSize | quote }}
+      - name: app
+        volumeClaimTemplate:
+          spec:
+            accessModes:
+            - ReadWriteOnce
+            resources:
+              requests:
+                storage: {{ $.Values.global.workflowWorkerAppDirPVCRequestSize | quote }}
+      params:
+      {{- if ($.Values.global.verbose | quote) }}
+      - name: verbose
+        value: {{ $.Values.global.verbose | quote }}
+      {{- end }}
+      - name: appRepoUrl
+        value: $(tt.params.git-repo-ssh-url)
+      - name: appRepoRef
+        value: $(tt.params.git-repo-event-target-ref)
+      {{- if ($.Values.global.appCloneSSLVerify | quote) }}
+      - name: appCloneSSLVerify
+        value: {{ $.Values.global.appCloneSSLVerify | quote }}
+      {{- end }}
+      - name: stepRunnerConfigDir
+        value: {{ (required "Global Value is required: stepRunnerConfigDir" $.Values.global.stepRunnerConfigDir) | quote }}
+      - name: pgpKeysSecretName
+        value: {{ include "ploigos-workflow.pgpKeysSecretName" . | quote }}
+      {{- if $.Values.global.stepRunnerPackageName | quote }}
+      - name: stepRunnerPackageName
+        value: {{ $.Values.global.stepRunnerPackageName | quote }}
+      {{- end }}
+      {{- if $.Values.global.stepRunnerUpdateLibrary | quote }}
+      - name: stepRunnerUpdateLibrary
+        value: {{ $.Values.global.stepRunnerUpdateLibrary | quote }}
+      {{- end }}
+      {{- if $.Values.global.stepRunnerLibIndexUrl }}
+      - name: stepRunnerLibIndexUrl
+        value: {{ $.Values.global.stepRunnerLibIndexUrl | quote }}
+      {{- end }}
+      {{- if $.Values.global.stepRunnerLibExtraIndexUrl }}
+      - name: stepRunnerLibExtraIndexUrl
+        value: {{ $.Values.global.stepRunnerLibExtraIndexUrl | quote }}
+      {{- end }}
+      {{- if $.Values.global.stepRunnerLibVersion }}
+      - name:  stepRunnerLibVersion
+        value: {{ $.Values.global.stepRunnerLibVersion | quote }}
+      {{- end }}
+      {{- if $.Values.global.stepRunnerLibSourceUrl }}
+      - name: stepRunnerLibSourceUrl
+        value: {{ $.Values.global.stepRunnerLibSourceUrl | quote }}
+      {{- end }}
+      - name: envNameDev
+        value: {{ $.Values.global.envNameDev | quote }}
+      - name: envNameTest
+        value: {{ $.Values.global.envNameTest | quote }}
+      - name: envNameProd
+        value: {{ $.Values.global.envNameProd | quote }}
+      {{- if $.Values.global.ciOnlyGitRefPatterns }}
+      - name: ciOnlyGitRefPatterns
+        value: {{ $.Values.global.ciOnlyGitRefPatterns }}
+      {{- end }}
+      {{- if $.Values.global.devGitRefPatterns }}
+      - name: devGitRefPatterns
+        value: {{ $.Values.global.devGitRefPatterns }}
+      {{- end }}
+      {{- if $.Values.global.releaseGitRefPatterns }}
+      - name: releaseGitRefPatterns
+        value: {{ $.Values.global.releaseGitRefPatterns }}
+      {{- end }}
+      - name: workflowWorkerImageDefault
+        value: {{ (required "Global Value is required: workflowWorkerImageDefault" $.Values.global.workflowWorkerImageDefault) | quote }}
+      - name: workflowWorkerImageSourceClone
+        value: {{ (required "Global Value is required: workflowWorkerImageSourceClone" $.Values.global.workflowWorkerImageSourceClone) | quote }}
+      {{- if $.Values.global.workflowWorkerImageUnitTest }}
+      - name: workflowWorkerImageUnitTest
+        value: {{ $.Values.global.workflowWorkerImageUnitTest | quote }}
+      {{- end }}
+      - name: workflowWorkerImagePackage
+        value: {{ (required "Global Value is required: workflowWorkerImagePackage" $.Values.global.workflowWorkerImagePackage) | quote }}
+      {{- if $.Values.global.workflowWorkerImageStaticCodeAnalysis }}
+      - name: workflowWorkerImageStaticCodeAnalysis
+        value: {{ $.Values.global.workflowWorkerImageStaticCodeAnalysis | quote }}
+      {{- end }}
+      - name: workflowWorkerImagePushArtifacts
+        value: {{ (required "Global Value is required: workflowWorkerImagePushArtifacts" $.Values.global.workflowWorkerImagePushArtifacts) | quote }}
+      - name: workflowWorkerImageContainerOperations
+        value: {{ (required "Global Value is required: workflowWorkerImageContainerOperations" $.Values.global.workflowWorkerImageContainerOperations) | quote }}
+      {{- if $.Values.global.workflowWorkerImageContainerImageStaticComplianceScan }}
+      - name: workflowWorkerImageContainerImageStaticComplianceScan
+        value: {{ $.Values.global.workflowWorkerImageContainerImageStaticComplianceScan | quote }}
+      {{- end }}
+      {{- if $.Values.global.workflowWorkerImageContainerImageStaticVulnerabilityScan }}
+      - name: workflowWorkerImageContainerImageStaticVulnerabilityScan
+        value: {{ $.Values.global.workflowWorkerImageContainerImageStaticVulnerabilityScan | quote }}
+      {{- end }}
+      - name: workflowWorkerImageDeploy
+        value: {{ (required "Global Value is required: workflowWorkerImageDeploy" $.Values.global.workflowWorkerImageDeploy) | quote }}
+      {{- if $.Values.global.workflowWorkerImageValidateEnvironmentConfiguration }}
+      - name: workflowWorkerImageValidateEnvironmentConfiguration
+        value: {{ $.Values.global.workflowWorkerImageValidateEnvironmentConfiguration | quote }}
+      {{- end }}
+      {{- if $.Values.global.workflowWorkerImageUAT }}
+      - name: workflowWorkerImageUAT
+        value: {{ $.Values.global.workflowWorkerImageUAT | quote }}
+      {{- end }}

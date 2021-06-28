@@ -2,17 +2,19 @@
 apiVersion: tekton.dev/v1beta1
 kind: ClusterTask
 metadata:
-  name: ploigos-step-runner
+  name: ploigos-step-runner-container-build-capabilities
   labels:
     {{- include "ploigos-workflow-tekton-cluster-resources.labels" . | nindent 4 }}
   annotations:
     tekton.dev/pipelines.minVersion: "0.14.0"
     tekton.dev/tags: ploigos,python
-    tekton.dev/displayName: Workflow Step Runner
+    tekton.dev/displayName: Workflow Step Runner with Elevated Capabilities
 spec:
   description: |
     Runs a given Ploigos step using the Workflow Step Runner library using the given
     Step Runner configuration against an optional environment.
+    This is performed in a container with the Capabilities required for doing container
+    image builds in a container running rootless with a random UID.
   workspaces:
   - name: home
     mountPath: /home/ploigos
@@ -88,6 +90,11 @@ spec:
   - name: workflow-step
     image: $(params.image)
     imagePullPolicy: $(params.imagePullPolicy)
+    securityContext:
+      capabilities:
+          add:
+          - 'SETUID'
+          - 'SETGID'
     env:
     - name: HOME
       value: $(workspaces.home.path)
@@ -135,6 +142,32 @@ spec:
         && echo "Updated CA Trust" \
         || (echo "WARN: Could not update CA trust."
             echo "If this is unexpected, check permissions on /etc/pki/ca-trust/extracted")
+
+      # NOTE 1: This is handled by the entrypoint of ploigos-tool-containers containers,
+      #         but tekton overrides the entrypoint when providing a script.
+      # NOTE 2: Making this optional incase using a container that doesn't allow for this
+      #         and it doesn't matter.
+      echo
+      echo "******************"
+      echo "* Update SUBUIDs *"
+      echo "******************"
+      echo $(whoami):10000:65536 >> /etc/subuid \
+        && echo "Updated $(whoami) SUBUIDs" \
+        || (echo "WARN: Could not update SUBUIDs for $(whoami)."
+            echo "If this is unexpected, check permissions on /etc/subuid")
+
+      # NOTE 1: This is handled by the entrypoint of ploigos-tool-containers containers,
+      #         but tekton overrides the entrypoint when providing a script.
+      # NOTE 2: Making this optional incase using a container that doesn't allow for this
+      #         and it doesn't matter.
+      echo
+      echo "******************"
+      echo "* Update SUBGIDs *"
+      echo "******************"
+      echo $(whoami):10000:65536 >> /etc/subgid \
+        && echo "Updated $(whoami) SUBGIDs" \
+        || (echo "WARN: Could not update SUBGIDs for $(whoami)."
+            echo "If this is unexpected, check permissions on /etc/subgid")
 
       # REASONS:
       #   * https://github.com/tektoncd/pipeline/issues/3509

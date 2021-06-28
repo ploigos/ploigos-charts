@@ -1,0 +1,8 @@
+***********************************************
+* ploigos-workflow-tekton-pipeline-everything *
+***********************************************
+
+Installed Ploigos Workflow (Everything)
+* Tekton Pipeline: {{ include "ploigos-workflow-tekton.pipelineName" . }}
+* Application: {{ $.Values.global.applicationName }}
+* Service: {{ $.Values.global.serviceName }}

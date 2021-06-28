@@ -10,13 +10,8 @@ Installed Following Cluster level resources:
   - import-pgp-keys
   - ploigos-setup-workflow-step-runner
   - ploigos-step-runner
+  - ploigos-step-runner-container-build-capabilities
   - pattern-matcher
     * temporary until https://github.com/tektoncd/pipeline/issues/3468 is resolved
   - ploigos-git-clone
     * temporary until https://github.com/tektoncd/catalog/issues/562 is resolved
-
-* ClusterRole
-  - {{ include "ploigos-workflow-tekton-cluster-resources.sccName" . }}
-
-* SecurityContextConstraints
-  - {{ include "ploigos-workflow-tekton-cluster-resources.sccName" . }}
