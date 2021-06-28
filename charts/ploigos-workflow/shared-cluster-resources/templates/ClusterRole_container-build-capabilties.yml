@@ -1,0 +1,18 @@
+{{- if $.Values.global.rbacCreate -}}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "ploigos-workflow-shared-cluster-resources.rbacName" . }}
+  labels:
+    {{- include "ploigos-workflow-shared-cluster-resources.labels" . | nindent 4 }}
+rules:
+- apiGroups:
+  - security.openshift.io
+  resourceNames:
+  - ploigos-workflow-runner
+  resources:
+  - securitycontextconstraints
+  verbs:
+  - use
+{{- end }}

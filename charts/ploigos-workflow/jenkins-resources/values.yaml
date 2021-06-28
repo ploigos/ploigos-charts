@@ -39,4 +39,4 @@ global:
   # a container running rootless with a random UID.
   # A RoleBinding will be created and attached the ServiceAccount that is used to run
   # the workflow Pods.
-  workflowWorkerRunnerRoleName: ploigos-workflow-runner
+  workflowWorkerRunnerRoleName: ploigos-workflow-runner-jenkins

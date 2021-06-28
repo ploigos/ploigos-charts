@@ -15,7 +15,7 @@ given application service.
 A Helm chart for Kubernetes to install the Ploigos Workflow (Minimal) run by Tekton for a
 given application service.
 
-### ploigos-workflow-tekton-shared-resources
+### ploigos-workflow-tekton-resources
 A Helm chart for Kubernetes to install the shared resources for a Ploigos Workflow run
 by Tekton for a given application service.
 

@@ -1,0 +1,7 @@
+---
+# rbacCreate if true then chart will create a SecurityContextConstraint with the
+# required capabilities to build container images within a container running rootless
+# with a random UID, and a ClusterRole that can use that SecurityContextConstraint.
+# Else if false then SecurityContextConstraints and ClusterRole will not be created
+# leaving it to another process to create the appropriate RBAC resources.
+rbacCreate: true

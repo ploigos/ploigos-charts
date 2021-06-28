@@ -1,8 +1,0 @@
-********************************************
-* ploigos-workflow-minimal-tekton-pipeline *
-********************************************
-
-Installed Ploigos Workflow (Minimal)
-* Tekton Pipeline: {{ include "ploigos-workflow-tekton.pipelineName" . }}
-* Application: {{ $.Values.global.applicationName }}
-* Service: {{ $.Values.global.serviceName }}

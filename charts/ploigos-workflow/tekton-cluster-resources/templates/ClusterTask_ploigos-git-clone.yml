@@ -110,6 +110,19 @@ spec:
         set -x
       fi
 
+      # NOTE 1: This is handled by the entrypoint of ploigos-* containers,
+      #         but tekton overrides the entrypoint when providing a script.
+      # NOTE 2: Making this optional incase using a container that doesn't allow for this
+      #         and it doesn't matter.
+      echo
+      echo "*******************"
+      echo "* Update CA Trust *"
+      echo "*******************"
+      update-ca-trust \
+        && echo "Updated CA Trust" \
+        || (echo "WARN: Could not update CA trust."
+            echo "If this is unexpected, check permissions on /etc/pki/ca-trust/extracted")
+
       CHECKOUT_DIR="$(workspaces.output.path)/$(params.subdirectory)"
 
       cleandir() {

@@ -1,36 +1,37 @@
 ---
-# workflowWorkerRunAsUser is the UID of the user to run the containers as in the ClusterTasks
-# Optional.
-#
-# If given then all ClusterTasks created by this chart will be hard coded to run as this user.
-# If 'rbacCreate' is also true then ClusterRole and SecurityContextConstraints will be created
-# for this UID as well.
-#
-# If not given then all ClusterTasks created by this chart will run as whatever UID
-# the Kubernetes platform they run on assigns them.
-workflowWorkerRunAsUser: 1001
-
-# rbacCreate if true and workflowWorkerRunAsUser is provided  then chart will create ClusterRole and
-# SecurityContextConstraints for the given workflowWorkerRunAsUser UID, else if false then ClusterRole
-# and SecurityContextConstraints will not be created even if workflowWorkerRunAsUser is specified leaving it
-# to another process to create the appropriate RBAC resources.
-rbacCreate: true
-
-# imagePullPolicy is the image pull policy to use for the ClusterTasks installed by this chart.
-#
 # NOTE
-# ----
-# This is a temporary parameter until See https://github.com/tektoncd/pipeline/issues/3423 is
-# resolved and this parameter can be passed at runtime.
-imagePullPolicy: IfNotPresent
-
-# Flag indicating that platform-level configuration is separate from
-# app-level configuration, and that the ploigos-step-runner ClusterTask
-# should expect to find:
-# - Platform config mounted in /opt/ploigos-platform-config
-# - Platform config secrets mounted in /opt/ploigos-platform-config-secrets
+# These are all global so that user doesn't have to know which child chart actually uses them
+# and rather just interacts with the cohesive system.
 #
-# This flag also adds two workspaces to the pipeline template:
-# - ploigos-platform-config: for mounting a ConfigMap
-# - ploigos-platform-config-secrets: for mounting a Secret
-separatePlatformConfig: false
+# Would have rather had them be scoped to the parent Chart and then re-pass them to child Chart
+# but no way to do that with Helm.
+global:
+  # rbacCreate if true then chart will create a SecurityContextConstraint with the
+  # required capabilities to build container images within a container running rootless
+  # with a random UID, and a ClusterRole that can use that SecurityContextConstraint.
+  # Else if false then SecurityContextConstraints and ClusterRole will not be created
+  # leaving it to another process to create the appropriate RBAC resources.
+  rbacCreate: true
+
+  # imagePullPolicy is the image pull policy to use for the ClusterTasks installed by this chart.
+  #
+  # NOTE
+  # ----
+  # This is a temporary parameter until See https://github.com/tektoncd/pipeline/issues/3423 is
+  # resolved and this parameter can be passed at runtime.
+  imagePullPolicy: IfNotPresent
+
+  # Flag indicating that platform-level configuration is separate from
+  # app-level configuration, and that the ploigos-step-runner ClusterTask
+  # should expect to find:
+  # - Platform config mounted in /opt/ploigos-platform-config
+  # - Platform config secrets mounted in /opt/ploigos-platform-config-secrets
+  #
+  # This flag also adds two workspaces to the pipeline template:
+  # - ploigos-platform-config: for mounting a ConfigMap
+  # - ploigos-platform-config-secrets: for mounting a Secret
+  separatePlatformConfig: false
+
+ploigos-workflow-shared-cluster-resources:
+  nameOverride: ploigos-workflow-tekton-cluster-resources
+  rbacNameOverride: ploigos-workflow-runner-tekton

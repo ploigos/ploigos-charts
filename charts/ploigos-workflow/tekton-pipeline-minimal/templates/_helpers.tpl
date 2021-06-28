@@ -1,8 +1,8 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "ploigos-workflow-tekton-cluster-resources.name" -}}
-{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+{{- define "ploigos-workflow-tekton-pipeline-minimal.name" -}}
+{{- .Values.global.nameOverride | default .Values.nameOverride | default .Chart.Name | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
@@ -10,7 +10,7 @@ Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
 */}}
-{{- define "ploigos-workflow-tekton-cluster-resources.fullname" -}}
+{{- define "ploigos-workflow-tekton-pipeline-minimal.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -26,26 +26,28 @@ If release name contains chart name it will be used as a full name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "ploigos-workflow-tekton-cluster-resources.chart" -}}
+{{- define "ploigos-workflow-tekton-pipeline-minimal.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels
 */}}
-{{- define "ploigos-workflow-tekton-cluster-resources.labels" -}}
-helm.sh/chart: {{ include "ploigos-workflow-tekton-cluster-resources.chart" . }}
-{{ include "ploigos-workflow-tekton-cluster-resources.selectorLabels" . }}
+{{- define "ploigos-workflow.labels" -}}
+helm.sh/chart: {{ include "ploigos-workflow-tekton-pipeline-minimal.chart" . }}
+{{ include "ploigos-workflow.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
-app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+ploigos/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
+app.kubernetes.io/component: ploigos-workflow
 {{- end }}
 
 {{/*
 Selector labels
 */}}
-{{- define "ploigos-workflow-tekton-cluster-resources.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "ploigos-workflow-tekton-cluster-resources.name" . }}
+{{- define "ploigos-workflow.selectorLabels" -}}
+app.kubernetes.io/name: {{ (required "Global Value is required: serviceName" $.Values.global.serviceName) }}
+app.kubernetes.io/part-of: {{ (required "Global Value is required: applicationName" $.Values.global.applicationName) }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}

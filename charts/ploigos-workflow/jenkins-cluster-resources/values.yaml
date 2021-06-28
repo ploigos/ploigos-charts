@@ -1,0 +1,18 @@
+---
+# NOTE
+# These are all global so that user doesn't have to know which child chart actually uses them
+# and rather just interacts with the cohesive system.
+#
+# Would have rather had them be scoped to the parent Chart and then re-pass them to child Chart
+# but no way to do that with Helm.
+global:
+  # rbacCreate if true then chart will create a SecurityContextConstraint with the
+  # required capabilities to build container images within a container running rootless
+  # with a random UID, and a ClusterRole that can use that SecurityContextConstraint.
+  # Else if false then SecurityContextConstraints and ClusterRole will not be created
+  # leaving it to another process to create the appropriate RBAC resources.
+  rbacCreate: true
+
+ploigos-workflow-shared-cluster-resources:
+  nameOverride: ploigos-workflow-jenkins-cluster-resources
+  rbacNameOverride: ploigos-workflow-runner-jenkins

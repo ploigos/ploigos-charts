@@ -1,0 +1,13 @@
+**************************************
+* ploigos-workflow-jenkins-resources *
+**************************************
+
+NEXT STEPS:
+
+1. Update Jenkinsfile to use generated ServiceAccount and Secret containing PGP private key.
+   * If using a workflow from https://github.com/ploigos/ploigos-jenkins-library (or fork)
+     then likely this means updating `workflowServiceAccountName` and `pgpKeysSecretName`.
+
+LEARN MORE:
+    helm status {{ .Release.Name }}
+    helm get all {{ .Release.Name }}

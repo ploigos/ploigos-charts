@@ -1,0 +1,12 @@
+*********************************************
+* ploigos-workflow-shared-cluster-resources *
+*********************************************
+
+Installed Following Cluster level resources:
+{{- if $.Values.global.rbacCreate -}}
+* ClusterRole
+  - {{ include "ploigos-workflow-shared-cluster-resources.rbacName" . }}
+
+* SecurityContextConstraints
+  - {{ include "ploigos-workflow-shared-cluster-resources.rbacName" . }}
+{{- end }}

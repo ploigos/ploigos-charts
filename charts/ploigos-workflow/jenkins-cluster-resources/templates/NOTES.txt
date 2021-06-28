@@ -1,0 +1,7 @@
+*********************************************
+* ploigos-workflow-jenkins-cluster-resources *
+*********************************************
+
+Installed Following Cluster level resources:
+* currently no jenkins specific cluster resources, see output from child chart
+  `ploigos-workflow-shared-cluster-resources`.

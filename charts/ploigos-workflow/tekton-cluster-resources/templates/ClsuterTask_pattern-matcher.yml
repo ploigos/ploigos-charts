@@ -68,10 +68,6 @@ spec:
   - name: pattern-match
     image: $(params.image)
     imagePullPolicy: $(params.imagePullPolicy)
-    {{- if $.Values.workflowWorkerRunAsUser }}
-    securityContext:
-      runAsUser: {{ $.Values.workflowWorkerRunAsUser | int }}
-    {{- end }}
     env:
     - name: VERBOSE
       value: $()

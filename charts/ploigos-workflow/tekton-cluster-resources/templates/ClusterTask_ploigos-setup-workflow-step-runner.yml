@@ -134,10 +134,6 @@ spec:
   - name: create-python-venv
     image: $(params.image)
     imagePullPolicy: $(params.imagePullPolicy)
-    {{- if $.Values.workflowWorkerRunAsUser }}
-    securityContext:
-      runAsUser: {{ $.Values.workflowWorkerRunAsUser | int }}
-    {{- end }}
     env:
     - name: HOME
       value: $(workspaces.home.path)
@@ -159,11 +155,6 @@ spec:
   - name: install-step-runner-python-library
     image: $(params.image)
     imagePullPolicy: $(params.imagePullPolicy)
-    {{- if $.Values.workflowWorkerRunAsUser }}
-    securityContext:
-      runAsNonRoot: true
-      runAsUser: {{ $.Values.workflowWorkerRunAsUser | int }}
-    {{- end }}
     env:
     - name: HOME
       value: $(workspaces.home.path)
@@ -188,7 +179,21 @@ spec:
       if [ "${VERBOSE}" == "true" ]; then set -x; else set +x; fi
       set -eu -o pipefail
 
+      # NOTE 1: This is handled by the entrypoint of ploigos-* containers,
+      #         but tekton overrides the entrypoint when providing a script.
+      # NOTE 2: Making this optional incase using a container that doesn't allow for this
+      #         and it doesn't matter.
+      echo
+      echo "*******************"
+      echo "* Update CA Trust *"
+      echo "*******************"
+      update-ca-trust \
+        && echo "Updated CA Trust" \
+        || (echo "WARN: Could not update CA trust."
+            echo "If this is unexpected, check permissions on /etc/pki/ca-trust/extracted")
+
       if [[ ${UPDATE_STEP_RUNNER_LIBRARY} =~ true|True ]]; then
+        echo
         echo "*********************"
         echo "* Update Python Pip *"
         echo "*********************"
@@ -217,6 +222,7 @@ spec:
           fi
         fi
 
+        echo
         echo "*************************************"
         echo "* Update Step Runner Python Package *"
         echo "*************************************"
@@ -225,10 +231,11 @@ spec:
         echo "Using pre-installed Workflow Step Runner library"
       fi
 
+      echo
       echo "****************************************************"
       echo "* Installed Step Runner Python Package Information *"
       echo "****************************************************"
       python -m pip show ${STEP_RUNNER_PACKAGE_NAME}
 
       # return results
-      echo -n "$HOME/$(params.venvName)" > $(results.venvPath.path)
+      echo -n "${HOME}/${VENV_NAME}" > $(results.venvPath.path)

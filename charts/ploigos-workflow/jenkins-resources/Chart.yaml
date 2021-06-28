@@ -1,0 +1,14 @@
+apiVersion: v2
+name: ploigos-workflow-jenkins-resources
+description: |
+  A Helm chart for Kubernetes to install the resources for a Ploigos Workflow run
+  by Jenkins for a given application service for any workflow.
+type: application
+maintainers:
+  - name: Red Hat, Inc.
+    email: ploigos@redhat.com
+dependencies:
+  - name: ploigos-workflow-shared-resources
+    version: ">= 0.0.0 || >= 0.0.0-0"
+# MANAGED BY: GitHub workflow
+version: 0.17.0
