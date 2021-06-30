@@ -85,7 +85,7 @@ jobs:
       uses: helm/chart-testing-action@v2.1.0
 
     - name: Setup kind cluster 🧰
-      uses: helm/kind-action@v1.1.0
+      uses: helm/kind-action@v1.2.0
 
     - name: Configure Kubernetes 🧰
       run: ${GITHUB_WORKSPACE}/.github/scripts/configure-kube.sh
