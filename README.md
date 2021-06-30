@@ -73,6 +73,7 @@ kubectl apply --filename https://storage.googleapis.com/tekton-releases/triggers
 
 ```bash
 ct lint \
+    --chart-dirs charts/ploigos-workflow/ \
     --all \
     --validate-maintainers=false \
     --validate-chart-schema=false
@@ -87,6 +88,7 @@ so be aware of what that means.
 kubectl config use-context kind-ploigos-test
 
 ct install \
+    --chart-dirs charts/ploigos-workflow/ \
     --all
 ```
 
