@@ -147,3 +147,7 @@ spec:
       - name: workflowWorkerImageUAT
         value: {{ $.Values.global.workflowWorkerImageUAT | quote }}
       {{- end }}
+      {{- if $.Values.global.workflowWorkerImageAutoGov }}
+      - name: workflowWorkerImageAutoGov
+        value: {{ $.Values.global.workflowWorkerImageAutoGov | quote }}
+      {{- end }}
