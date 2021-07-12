@@ -276,6 +276,9 @@ global:
   # workflowWorkerImageUAT is the container image to use when creating a workflow worker
   # to run pipeline steps when performing user acceptance tests (UAT) step(s).
   workflowWorkerImageUAT:
+  # workflowWorkerImageAutoGov is the container image to use when creating a workflow worker
+  # to run pipeline steps when performing auto governance steps.
+  workflowWorkerImageAutoGov: ploigos/ploigos-tool-autogov:latest
 
   # tektonGitSSHKeys is a dictionary of private SSH keys to use with various
   # Git source control services.

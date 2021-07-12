@@ -252,6 +252,11 @@ spec:
       description: |
         Container image to use when creating a workflow worker
         to run pipeline steps when performing user acceptance tests (UAT) step(s).
+    - name: workflowWorkerImageAutoGov
+      type: string
+      description: |
+        Container image to use when creating a workflow worker
+        to run pipeline steps when performing auto governance steps.
 
   tasks:
   #########
@@ -904,11 +909,53 @@ spec:
       value: $(params.devGitRefPatterns)
 
   #####################################
+  # DEV: Audit Attestation            #
+  #####################################
+  - name: dev-audit-attestation
+    runAfter:
+    - dev-stage-gate
+    when:
+    - input: "$(tasks.dev-stage-gate.results.matches)"
+      operator: in
+      values: ["true"]
+    taskRef:
+      kind: ClusterTask
+      name: ploigos-step-runner
+    workspaces:
+    - name: home 
+      workspace: home 
+    - name: app
+      workspace: app
+    {{- if $.Values.global.separatePlatformConfig }}
+    - name: ploigos-platform-config
+      workspace: ploigos-platform-config
+    - name: ploigos-platform-config-secrets
+      workspace: ploigos-platform-config-secrets
+    {{- end }}
+    params:
+    - name: verbose
+      value: $(params.verbose)
+    - name: image
+      value: $(params.workflowWorkerImageAutoGov)
+    - name: imagePullPolicy
+      value: $(params.workflowWorkersImagePullPolicy)
+    - name: stepRunnerPackageName
+      value: $(params.stepRunnerPackageName)
+    - name: venvPath
+      value: $(tasks.setup-workflow-step-runner.results.venvPath)
+    - name: stepName
+      value: audit-attestation
+    - name: stepRunnerConfigDir
+      value: $(params.stepRunnerConfigDir)
+    - name: environment
+      value: $(params.envNameDev)
+
+  #####################################
   # DEV: Deploy or Update Environment #
   #####################################
   - name: dev-deploy-or-update-environment
     runAfter:
-    - dev-stage-gate
+    - dev-audit-attestation
     when:
     - input: "$(tasks.dev-stage-gate.results.matches)"
       operator: in
@@ -1095,12 +1142,54 @@ spec:
     - name: pattern
       value: $(params.releaseGitRefPatterns)
 
+  #####################################
+  # TEST: Audit Attestation           #
+  #####################################
+  - name: test-audit-attestation
+    runAfter:
+    - test-stage-gate
+    when:
+    - input: "$(tasks.test-stage-gate.results.matches)"
+      operator: in
+      values: ["true"]
+    taskRef:
+      kind: ClusterTask
+      name: ploigos-step-runner
+    workspaces:
+    - name: home 
+      workspace: home 
+    - name: app
+      workspace: app
+    {{- if $.Values.global.separatePlatformConfig }}
+    - name: ploigos-platform-config
+      workspace: ploigos-platform-config
+    - name: ploigos-platform-config-secrets
+      workspace: ploigos-platform-config-secrets
+    {{- end }}
+    params:
+    - name: verbose
+      value: $(params.verbose)
+    - name: image
+      value: $(params.workflowWorkerImageAutoGov)
+    - name: imagePullPolicy
+      value: $(params.workflowWorkersImagePullPolicy)
+    - name: stepRunnerPackageName
+      value: $(params.stepRunnerPackageName)
+    - name: venvPath
+      value: $(tasks.setup-workflow-step-runner.results.venvPath)
+    - name: stepName
+      value: audit-attestation
+    - name: stepRunnerConfigDir
+      value: $(params.stepRunnerConfigDir)
+    - name: environment
+      value: $(params.envNameTest)
+
   ######################################
   # TEST: Deploy or Update Environment #
   ######################################
   - name: test-deploy-or-update-environment
     runAfter:
-    - test-stage-gate
+    - test-audit-attestation
     when:
     - input: "$(tasks.test-stage-gate.results.matches)"
       operator: in
@@ -1280,12 +1369,54 @@ spec:
     - name: pattern
       value: $(params.releaseGitRefPatterns)
 
+  #####################################
+  # PROD: Audit Attestation           #
+  #####################################
+  - name: prod-audit-attestation
+    runAfter:
+    - prod-stage-gate
+    when:
+    - input: "$(tasks.prod-stage-gate.results.matches)"
+      operator: in
+      values: ["true"]
+    taskRef:
+      kind: ClusterTask
+      name: ploigos-step-runner
+    workspaces:
+    - name: home 
+      workspace: home 
+    - name: app
+      workspace: app
+    {{- if $.Values.global.separatePlatformConfig }}
+    - name: ploigos-platform-config
+      workspace: ploigos-platform-config
+    - name: ploigos-platform-config-secrets
+      workspace: ploigos-platform-config-secrets
+    {{- end }}
+    params:
+    - name: verbose
+      value: $(params.verbose)
+    - name: image
+      value: $(params.workflowWorkerImageAutoGov)
+    - name: imagePullPolicy
+      value: $(params.workflowWorkersImagePullPolicy)
+    - name: stepRunnerPackageName
+      value: $(params.stepRunnerPackageName)
+    - name: venvPath
+      value: $(tasks.setup-workflow-step-runner.results.venvPath)
+    - name: stepName
+      value: audit-attestation
+    - name: stepRunnerConfigDir
+      value: $(params.stepRunnerConfigDir)
+    - name: environment
+      value: $(params.envNameProd)
+ 
   ######################################
   # PROD: Deploy or Update Environment #
   ######################################
   - name: prod-deploy-or-update-environment
     runAfter:
-    - prod-stage-gate
+    - prod-audit-attestation
     when:
     - input: "$(tasks.prod-stage-gate.results.matches)"
       operator: in
