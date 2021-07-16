@@ -1560,7 +1560,7 @@ spec:
     - name: verbose
       value: $(params.verbose)
     - name: image
-      value: $(params.workflowWorkerImageDefault)
+      value: $(params.workflowWorkerImageAutoGov)
     - name: imagePullPolicy
       value: $(params.workflowWorkersImagePullPolicy)
     - name: stepRunnerPackageName
