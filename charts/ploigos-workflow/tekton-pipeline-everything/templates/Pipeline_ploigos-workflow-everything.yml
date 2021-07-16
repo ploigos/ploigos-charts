@@ -879,7 +879,7 @@ spec:
     - name: verbose
       value: $(params.verbose)
     - name: image
-      value: $(params.workflowWorkerImageDefault)
+      value: $(params.workflowWorkerImageAutoGov)
     - name: imagePullPolicy
       value: $(params.workflowWorkersImagePullPolicy)
     - name: stepRunnerPackageName
@@ -922,8 +922,8 @@ spec:
       kind: ClusterTask
       name: ploigos-step-runner
     workspaces:
-    - name: home 
-      workspace: home 
+    - name: home
+      workspace: home
     - name: app
       workspace: app
     {{- if $.Values.global.separatePlatformConfig }}
@@ -1104,7 +1104,7 @@ spec:
     - name: verbose
       value: $(params.verbose)
     - name: image
-      value: $(params.workflowWorkerImageDefault)
+      value: $(params.workflowWorkerImageAutoGov)
     - name: imagePullPolicy
       value: $(params.workflowWorkersImagePullPolicy)
     - name: stepRunnerPackageName
@@ -1156,8 +1156,8 @@ spec:
       kind: ClusterTask
       name: ploigos-step-runner
     workspaces:
-    - name: home 
-      workspace: home 
+    - name: home
+      workspace: home
     - name: app
       workspace: app
     {{- if $.Values.global.separatePlatformConfig }}
@@ -1338,7 +1338,7 @@ spec:
     - name: verbose
       value: $(params.verbose)
     - name: image
-      value: $(params.workflowWorkerImageDefault)
+      value: $(params.workflowWorkerImageAutoGov)
     - name: imagePullPolicy
       value: $(params.workflowWorkersImagePullPolicy)
     - name: stepRunnerPackageName
@@ -1383,8 +1383,8 @@ spec:
       kind: ClusterTask
       name: ploigos-step-runner
     workspaces:
-    - name: home 
-      workspace: home 
+    - name: home
+      workspace: home
     - name: app
       workspace: app
     {{- if $.Values.global.separatePlatformConfig }}
@@ -1410,7 +1410,7 @@ spec:
       value: $(params.stepRunnerConfigDir)
     - name: environment
       value: $(params.envNameProd)
- 
+
   ######################################
   # PROD: Deploy or Update Environment #
   ######################################
@@ -1523,7 +1523,7 @@ spec:
     - name: verbose
       value: $(params.verbose)
     - name: image
-      value: $(params.workflowWorkerImageDefault)
+      value: $(params.workflowWorkerImageAutoGov)
     - name: imagePullPolicy
       value: $(params.workflowWorkersImagePullPolicy)
     - name: stepRunnerPackageName
