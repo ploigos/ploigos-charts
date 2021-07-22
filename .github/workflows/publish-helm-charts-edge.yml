@@ -265,7 +265,7 @@ jobs:
 
     - name: TEST FIX PERMISSIONS
       run: |
-        chown -R $(id):$(id -g) .git/
+        chown -R $(id -u):$(id -g) .git/
 
     - name: Setup Helm 🧰
       uses: azure/setup-helm@v1
