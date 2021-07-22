@@ -225,10 +225,26 @@ jobs:
       with:
         fetch-depth: 0
 
+    - name: DEBUG 1
+      run: |
+        id
+        whoami
+        ls -al
+        ls -al .git/
+        ls -al .git/objects
+
     - name: Configure Git 🛠
       run: |
         git config user.name "$GITHUB_ACTOR"
         git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+    - name: DEBUG 2
+      run: |
+        id
+        whoami
+        ls -al
+        ls -al .git/
+        ls -al .git/objects
 
     - name: Download Helm Charts prepared to release 🔻
       id: download-helm-charts
@@ -236,16 +252,40 @@ jobs:
       with:
         path: ${{ env.CHARTS_DIR }}
 
+    - name: DEBUG 3
+      run: |
+        id
+        whoami
+        ls -al
+        ls -al .git/
+        ls -al .git/objects
+
     - name: Push Updated Helm Chart Verions 💾
       uses: github-actions-x/commit@v2.7
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         commit-message: "Updated Helm Chart versions for latest merge to: ${{ github.ref }}"
 
+    - name: DEBUG 4
+      run: |
+        id
+        whoami
+        ls -al
+        ls -al .git/
+        ls -al .git/objects
+
     - name: Setup Helm 🧰
       uses: azure/setup-helm@v1
       with:
         version: v3.6.1
+
+    - name: DEBUG 5
+      run: |
+        id
+        whoami
+        ls -al
+        ls -al .git/
+        ls -al .git/objects
 
     - name: Run chart-releaser 🚀
       uses: helm/chart-releaser-action@v1.2.1
