@@ -179,6 +179,7 @@ jobs:
         default_author: github_actions
         message: "Updated Helm Chart versions for latest merge to: ${{ github.ref }}"
         push: true
+        branch: main
 
     - name: Setup Helm 🧰
       uses: azure/setup-helm@v1
