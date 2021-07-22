@@ -167,11 +167,6 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Configure Git 🛠
-      run: |
-        git config user.name "$GITHUB_ACTOR"
-        git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
-
     - name: Download Helm Charts prepared to release 🔻
       id: download-helm-charts
       uses: actions/download-artifact@v2
@@ -179,11 +174,11 @@ jobs:
         path: ${{ env.CHARTS_DIR }}
 
     - name: Push Updated Helm Chart Verions 💾
-      uses: github-actions-x/commit@v2.7
+      uses: EndBug/add-and-commit@v7
       with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        push-branch: main
-        commit-message: 'Updated Helm Chart versions for release: v${{ needs.setup.outputs.helm-charts-new-semver }}'
+        default_author: github_actions
+        message: "Updated Helm Chart versions for latest merge to: ${{ github.ref }}"
+        push: true
 
     - name: Setup Helm 🧰
       uses: azure/setup-helm@v1
