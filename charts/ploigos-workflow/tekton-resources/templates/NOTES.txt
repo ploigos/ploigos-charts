@@ -4,8 +4,10 @@
 
 NEXT STEPS:
 
+NOTE: Can't dynamically determine CHART_NAME due to Helm child charts not knowing the parent chart name.
+
 1. !!IMPORTANT!! Test that the chart installed successfully. This is important to ensure all routes have been admitted.
-    helm test {{ include "ploigos-workflow-tekton-resources.name" . }} --namespace {{ .Release.Namespace }}
+    helm test CHART_NAME --namespace {{ .Release.Namespace }}
 
 2. Get the EventListner Route:
     export EL_ROUTE=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.host}" route {{ include "ploigos-workflow-tekton.eventListenerIngressName" . }})
@@ -13,6 +15,7 @@ NEXT STEPS:
     echo "EventListener Route:"
     echo "    https://${EL_ROUTE}"
     echo
+
 
 3. Configure your Source Control Service repository hosting your application to send Webhook events
 to the EventListener Route:
@@ -28,5 +31,5 @@ to the EventListener Route:
       - `main`
 
 LEARN MORE:
-    helm status {{ .Release.Name }}
-    helm get all {{ .Release.Name }}
+    helm status CHART_NAME
+    helm get all CHART_NAME
