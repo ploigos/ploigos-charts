@@ -169,6 +169,21 @@ spec:
         || (echo "WARN: Could not update SUBGIDs for $(whoami)."
             echo "If this is unexpected, check permissions on /etc/subgid")
 
+      # NOTE 1: This is handled by the entrypoint of ploigos-tool-containers containers,
+      #         but tekton overrides the entrypoint when providing a script.
+      echo
+      echo "***************************"
+      echo "* Create Container Socket *"
+      echo "***************************"
+      set +u
+      [[ -z "${DOCKER_HOST}" ]] \
+        && echo 'DOCKER_HOST not set, setting to default' \
+        && export DOCKER_HOST="unix:/${HOME}/podman.sock"
+      set -u
+      podman system service --time=0 ${DOCKER_HOST} \
+        1> ${HOME}/podman.stdout 2> ${HOME}/podman.stderr & \
+      echo "Created Container Socket: ${DOCKER_HOST}"
+
       # REASONS:
       #   * https://github.com/tektoncd/pipeline/issues/3509
       echo
