@@ -55,6 +55,21 @@ global:
   # Required if eventListenerCreateIngress is true.
   eventListenerIngressHost:
 
+  # As of Tekton Triggers v0.14.2 you need "A Kubernetes ClusterRole that permits read access to
+  # ClusterTriggerBindings objects".
+  #
+  # But the default ClusterRole for use by EventListeners that has these permissions,
+  # as of 8/9/21, isn't created by default in v0.14.2, or v0.15.0, but it is in the main branch.
+  # https://github.com/tektoncd/triggers/blob/3c4e26bbef121c51ab7d7941ffc59a7028bf55a8/config/200-clusterrole.yaml#L82-L92
+  #
+  # As workaround, currently (8/9/21) the OpenShift Pipelines operator (downstream of Tekton)
+  # does create a CluserRole with the needed permissions so can default to using that.
+  # Though on a none OpenShift cluster or an OpenShift cluster using upstream Tekton a custom
+  # ClusterRole will need to be created with the correct permissions and the name of that role
+  # used for this value until such time as Tekton releases with its
+  # 'tekton-triggers-eventlistener-clusterroles' ClusterRole.
+  eventListenerClusterRoleName: openshift-pipelines-clusterinterceptors
+
   # cleanupPipelineRunsToKeep is the number of Tekton PipelineRuns to keep when automatically
   # deleting old PipelineRuns for a given Pipeline.
   # Required.
