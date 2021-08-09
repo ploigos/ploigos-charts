@@ -66,7 +66,7 @@ global:
   # cleanupPipelineSuccessfulJobHistoryLimit is the number of Job resources to keep created
   # by the CronJob for deleting old PipelineRuns.
   # Required.
-  cleanupPipelineSuccessfulJobHistoryLimit: 5
+  cleanupPipelineSuccessfulJobHistoryLimit: 1
   # cleanupPipelineFailedJobHistoryLimit is the number of failed Job resources to keep created
   # by the CronJob for deleting old PipelineRuns.
   # Required.
