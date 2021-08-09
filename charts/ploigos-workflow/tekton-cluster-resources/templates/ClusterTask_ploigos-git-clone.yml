@@ -86,7 +86,7 @@ spec:
     type: string
     description: |
       Container image to run the steps of this task in.
-    default: gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.12.1
+    default: gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.26.0
   - name: imagePullPolicy
     type: string
     description: |
