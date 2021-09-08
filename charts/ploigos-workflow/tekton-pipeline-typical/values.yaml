@@ -234,7 +234,7 @@ global:
   # a container running rootless with a random UID.
   # A RoleBinding will be created and attached the ServiceAccount that is used to run
   # the workflow Pods.
-  workflowWorkerRunnerRoleName: pploigos-workflow-runner-tekton
+  workflowWorkerRunnerRoleName: ploigos-workflow-runner-tekton
 
   # workflowWorkerImageDefault is the container image to use when creating a workflow worker
   # to run pipeline steps when no other specific container image has been specified for that step.
