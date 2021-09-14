@@ -71,6 +71,23 @@ entries:
     version: 0.17.0-edge.1
   ploigos-workflow-jenkins-cluster-resources:
   - apiVersion: v2
+    created: "2021-09-14T18:48:23.554866152Z"
+    dependencies:
+    - name: ploigos-workflow-shared-cluster-resources
+      repository: ""
+      version: '>= 0.0.0 || >= 0.0.0-0'
+    description: 'A Helm chart for Kubernetes to deploy the cluster level resources
+      required to deploy and run Ploigos Workflows using Jenkins. '
+    digest: 6469cc09e5bfa0c36567300d03fbd0c1abe7be49d9d5a6a0830b5614d0e90111
+    maintainers:
+    - email: ploigos@redhat.com
+      name: Red Hat, Inc.
+    name: ploigos-workflow-jenkins-cluster-resources
+    type: application
+    urls:
+    - https://github.com/ploigos/ploigos-charts/releases/download/ploigos-workflow-jenkins-cluster-resources-0.22.0/ploigos-workflow-jenkins-cluster-resources-0.22.0.tgz
+    version: 0.22.0
+  - apiVersion: v2
     created: "2021-09-07T15:40:33.287108462Z"
     dependencies:
     - name: ploigos-workflow-shared-cluster-resources
@@ -343,6 +360,23 @@ entries:
     - https://github.com/ploigos/ploigos-charts/releases/download/ploigos-workflow-jenkins-cluster-resources-0.18.0-edge.1/ploigos-workflow-jenkins-cluster-resources-0.18.0-edge.1.tgz
     version: 0.18.0-edge.1
   ploigos-workflow-jenkins-resources:
+  - apiVersion: v2
+    created: "2021-09-14T18:48:23.67360395Z"
+    dependencies:
+    - name: ploigos-workflow-shared-resources
+      repository: ""
+      version: '>= 0.0.0 || >= 0.0.0-0'
+    description: 'A Helm chart for Kubernetes to install the resources for a Ploigos
+      Workflow run by Jenkins for a given application service for any workflow. '
+    digest: ba42e8067c07700b3ccabbee1e81eee414b24891c44ebbaca52bdacd09cd6080
+    maintainers:
+    - email: ploigos@redhat.com
+      name: Red Hat, Inc.
+    name: ploigos-workflow-jenkins-resources
+    type: application
+    urls:
+    - https://github.com/ploigos/ploigos-charts/releases/download/ploigos-workflow-jenkins-resources-0.22.0/ploigos-workflow-jenkins-resources-0.22.0.tgz
+    version: 0.22.0
   - apiVersion: v2
     created: "2021-09-07T15:40:33.409137531Z"
     dependencies:
@@ -822,6 +856,19 @@ entries:
     version: 0.14.0-edge.1
   ploigos-workflow-shared-cluster-resources:
   - apiVersion: v2
+    created: "2021-09-14T18:48:23.819692938Z"
+    description: 'A Helm chart for Kubernetes to deploy the cluster level resources
+      required to deploy and run Ploigos Workflows no matter the workflow runner tool. '
+    digest: 734db2afe386a656f73e62a4d65b934d04a5bc0d695d4bfc41185ac802920819
+    maintainers:
+    - email: ploigos@redhat.com
+      name: Red Hat, Inc.
+    name: ploigos-workflow-shared-cluster-resources
+    type: application
+    urls:
+    - https://github.com/ploigos/ploigos-charts/releases/download/ploigos-workflow-shared-cluster-resources-0.22.0/ploigos-workflow-shared-cluster-resources-0.22.0.tgz
+    version: 0.22.0
+  - apiVersion: v2
     created: "2021-09-07T15:40:33.519000326Z"
     description: 'A Helm chart for Kubernetes to deploy the cluster level resources
       required to deploy and run Ploigos Workflows no matter the workflow runner tool. '
@@ -1030,6 +1077,21 @@ entries:
     - https://github.com/ploigos/ploigos-charts/releases/download/ploigos-workflow-shared-cluster-resources-0.18.0-edge.1/ploigos-workflow-shared-cluster-resources-0.18.0-edge.1.tgz
     version: 0.18.0-edge.1
   ploigos-workflow-shared-resources:
+  - apiVersion: v2
+    created: "2021-09-14T18:48:23.956959001Z"
+    description: 'A Helm chart for Kubernetes to install the shared resources for
+      a Ploigos Workflow run by any workflow executor service (ex: Tekton, DronCI,
+      Jenkins, etc).  This is meant to be a child chart of other charts for specific
+      tools to implement specific Workflows for specific workflow executor services. '
+    digest: f5317b119b5b2b8a91deca4d7fd8550d063f3a0b65e45f789b70648324e6ac3d
+    maintainers:
+    - email: ploigos@redhat.com
+      name: Red Hat, Inc.
+    name: ploigos-workflow-shared-resources
+    type: application
+    urls:
+    - https://github.com/ploigos/ploigos-charts/releases/download/ploigos-workflow-shared-resources-0.22.0/ploigos-workflow-shared-resources-0.22.0.tgz
+    version: 0.22.0
   - apiVersion: v2
     created: "2021-09-07T15:40:33.621385567Z"
     description: 'A Helm chart for Kubernetes to install the shared resources for
@@ -1589,6 +1651,23 @@ entries:
     version: 0.14.0-edge.1
   ploigos-workflow-tekton-cluster-resources:
   - apiVersion: v2
+    created: "2021-09-14T18:48:24.084432123Z"
+    dependencies:
+    - name: ploigos-workflow-shared-cluster-resources
+      repository: ""
+      version: '>= 0.0.0 || >= 0.0.0-0'
+    description: 'A Helm chart for Kubernetes to deploy the cluster level resources
+      required to deploy and run Ploigos Workflows using Tekton. '
+    digest: 9bb6d761e104a48237a88d7509dfc50d71ab690f2746116a087e1d82942d06da
+    maintainers:
+    - email: ploigos@redhat.com
+      name: Red Hat, Inc.
+    name: ploigos-workflow-tekton-cluster-resources
+    type: application
+    urls:
+    - https://github.com/ploigos/ploigos-charts/releases/download/ploigos-workflow-tekton-cluster-resources-0.22.0/ploigos-workflow-tekton-cluster-resources-0.22.0.tgz
+    version: 0.22.0
+  - apiVersion: v2
     created: "2021-09-07T15:40:33.743870859Z"
     dependencies:
     - name: ploigos-workflow-shared-cluster-resources
@@ -2018,6 +2097,23 @@ entries:
     version: 0.14.0-edge.1
   ploigos-workflow-tekton-pipeline-everything:
   - apiVersion: v2
+    created: "2021-09-14T18:48:24.23882963Z"
+    dependencies:
+    - name: ploigos-workflow-tekton-resources
+      repository: ""
+      version: '>= 0.0.0 || >= 0.0.0-0'
+    description: 'A Helm chart for Kubernetes to install the Ploigos Workflow (Everything)
+      run by Tekton for a given application service. '
+    digest: c8788a06ac61e49c2d230f87f886414c8f9955cab958490f64cb392378448351
+    maintainers:
+    - email: ploigos@redhat.com
+      name: Red Hat, Inc.
+    name: ploigos-workflow-tekton-pipeline-everything
+    type: application
+    urls:
+    - https://github.com/ploigos/ploigos-charts/releases/download/ploigos-workflow-tekton-pipeline-everything-0.22.0/ploigos-workflow-tekton-pipeline-everything-0.22.0.tgz
+    version: 0.22.0
+  - apiVersion: v2
     created: "2021-09-07T15:40:33.874918055Z"
     dependencies:
     - name: ploigos-workflow-tekton-resources
@@ -2290,6 +2386,23 @@ entries:
     - https://github.com/ploigos/ploigos-charts/releases/download/ploigos-workflow-tekton-pipeline-everything-0.18.0-edge.1/ploigos-workflow-tekton-pipeline-everything-0.18.0-edge.1.tgz
     version: 0.18.0-edge.1
   ploigos-workflow-tekton-pipeline-minimal:
+  - apiVersion: v2
+    created: "2021-09-14T18:48:24.388967977Z"
+    dependencies:
+    - name: ploigos-workflow-tekton-resources
+      repository: ""
+      version: '>= 0.0.0 || >= 0.0.0-0'
+    description: 'A Helm chart for Kubernetes to install the Ploigos Workflow (Minimal)
+      run by Tekton for a given application service. '
+    digest: d770c1aad5e67abb50c15644343b179516dcb6f3bdd9a2fd9240c5a520c5c328
+    maintainers:
+    - email: ploigos@redhat.com
+      name: Red Hat, Inc.
+    name: ploigos-workflow-tekton-pipeline-minimal
+    type: application
+    urls:
+    - https://github.com/ploigos/ploigos-charts/releases/download/ploigos-workflow-tekton-pipeline-minimal-0.22.0/ploigos-workflow-tekton-pipeline-minimal-0.22.0.tgz
+    version: 0.22.0
   - apiVersion: v2
     created: "2021-09-07T15:40:33.991314359Z"
     dependencies:
@@ -2564,6 +2677,23 @@ entries:
     version: 0.18.0-edge.1
   ploigos-workflow-tekton-pipeline-typical:
   - apiVersion: v2
+    created: "2021-09-14T18:48:24.534430556Z"
+    dependencies:
+    - name: ploigos-workflow-tekton-resources
+      repository: ""
+      version: '>= 0.0.0 || >= 0.0.0-0'
+    description: 'A Helm chart for Kubernetes to install the Ploigos Workflow (Typical)
+      run by Tekton for a given application service. '
+    digest: 72a9791cdae058c6db4e083e796f4537b1eefc4817b1a8414168a785bfa5e07f
+    maintainers:
+    - email: ploigos@redhat.com
+      name: Red Hat, Inc.
+    name: ploigos-workflow-tekton-pipeline-typical
+    type: application
+    urls:
+    - https://github.com/ploigos/ploigos-charts/releases/download/ploigos-workflow-tekton-pipeline-typical-0.22.0/ploigos-workflow-tekton-pipeline-typical-0.22.0.tgz
+    version: 0.22.0
+  - apiVersion: v2
     created: "2021-09-07T15:40:34.141945981Z"
     dependencies:
     - name: ploigos-workflow-tekton-resources
@@ -2836,6 +2966,24 @@ entries:
     - https://github.com/ploigos/ploigos-charts/releases/download/ploigos-workflow-tekton-pipeline-typical-0.18.0-edge.1/ploigos-workflow-tekton-pipeline-typical-0.18.0-edge.1.tgz
     version: 0.18.0-edge.1
   ploigos-workflow-tekton-resources:
+  - apiVersion: v2
+    created: "2021-09-14T18:48:24.684621103Z"
+    dependencies:
+    - name: ploigos-workflow-shared-resources
+      repository: ""
+      version: '>= 0.0.0 || >= 0.0.0-0'
+    description: 'A Helm chart for Kubernetes to install the resources for a Ploigos
+      Workflow run by Tekton for a given application service for any workflow.  Not
+      intended to be used on its own but rather as a sub chart for a specific Workflow. '
+    digest: baaace6111a01d1d571becc0b0245a1547159baff9a65c377759d2224abc03c1
+    maintainers:
+    - email: ploigos@redhat.com
+      name: Red Hat, Inc.
+    name: ploigos-workflow-tekton-resources
+    type: application
+    urls:
+    - https://github.com/ploigos/ploigos-charts/releases/download/ploigos-workflow-tekton-resources-0.22.0/ploigos-workflow-tekton-resources-0.22.0.tgz
+    version: 0.22.0
   - apiVersion: v2
     created: "2021-09-07T15:40:34.274722859Z"
     dependencies:
@@ -3410,4 +3558,4 @@ entries:
     urls:
     - https://github.com/ploigos/ploigos-charts/releases/download/ploigos-workflow-typical-tekton-pipeline-0.17.0-edge.1/ploigos-workflow-typical-tekton-pipeline-0.17.0-edge.1.tgz
     version: 0.17.0-edge.1
-generated: "2021-09-07T15:40:34.276566046Z"
+generated: "2021-09-14T18:48:24.686421029Z"
