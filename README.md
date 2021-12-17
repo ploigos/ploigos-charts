@@ -28,11 +28,53 @@ by any workflow executor service (ex: Tekton, DronCI, Jenkins, etc).
 This is meant to be a child chart of other charts for specific tools to implement specific
 Workflows for specific workflow executor services.
 
+## Usage
+
+### Installing a Chart
+1. Install Helm.
+2. Change to the directory with the charts for the workflow runner you are using.
+```
+cd charts/ploigos-workflow/jenkins-resources
+```
+4. Tailor the values.xml in the directory to your needs. See the comments in the example values.xml to help you choose the values. See below about the pgpKeys field.
+The tailored file should look similar to this example:
+```
+global:
+  serviceName: hello
+  applicationName: ref-nodejs-npm-jenkins-min
+  pgpKeysSecretNameOverride:
+  pgpKeys:
+		key: |
+		  -----BEGIN PGP PRIVATE KEY BLOCK-----
+					 < REDACTED >
+		  -----END PGP PRIVATE KEY BLOCK-----
+  workflowWorkerRunnerRoleName: ploigos-workflow-runner-jenkins
+```
+
+5. Run the Helm command that installs the chart.
+```
+helm install -f values.yaml ploigos-workflow-ref-nodejs-jenkins-min .
+```
+
+### Reusing a PGP Key (for Development):
+If you are using PGP keys, the most secure configuration is to generate a new private PGP key for each service. BUT there is significant overhead in managing many PGP keys. If you are simulating a multi-key configuration in a development environment that is used only to develop contributions to the Ploigos ecosystem, then you may want to reuse an existing PGP private key but still create a new Secret to to hold each key.
+
+To get the PGP key in this case:
+1. List the secrets currently used by your workflow.
+```
+oc get secret -n jenkins | grep pgp
+```
+2. Pick a Secret and get the base64 decoded private pgp key that it contains.
+```
+oc get secret pgp-keys-ploigos-workflow-ref-spring-boot-jkube-jenkins-min -o jsonpath='{.data}' -n jenkins | sed 's/.*:\(.*\)/\1/' | sed 's/\]$//' | base64 -d
+```
+3. Use the printed value in the values.yml example above.
+
 ## Development
 
 ### Set Up Development Environment
 
-1. [Install helm](https://github.com/helm/helm#install)
+1. [Install Helm](https://github.com/helm/helm#install)
 2. [Install chart-releaser](https://github.com/helm/chart-releaser#installation)
 3. Install or have access to a Kubernetes cluster
     * [Kind](https://kind.sigs.k8s.io/)
