@@ -787,7 +787,7 @@ spec:
       values: ["true"]
     taskRef:
       kind: ClusterTask
-      name: ploigos-step-runner
+      name: ploigos-step-runner-container-build-capabilities
     workspaces:
     - name: home
       workspace: home
