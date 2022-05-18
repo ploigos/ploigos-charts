@@ -13,4 +13,4 @@ dependencies:
   - name: ploigos-workflow-shared-resources
     version: ">= 0.0.0 || >= 0.0.0-0"
 # MANAGED BY: GitHub workflow
-version: 0.22.1-edge.0
+version: 0.22.1-edge.1
